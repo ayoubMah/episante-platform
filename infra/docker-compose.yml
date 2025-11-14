@@ -12,6 +12,20 @@ services:
     networks:
       - episante_net
 
+  patient-service:
+    build:
+      context: ../patient-service
+      dockerfile: Dockerfile
+    container_name: patient-service
+    depends_on:
+      - patient-db
+    ports:
+      - "9091:9091"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    networks:
+      - episante_net
+
   doctor-db:
     image: postgres:16
     container_name: doctor-db
@@ -22,6 +36,20 @@ services:
     volumes:
       - ../postgres/doctor-db/init:/docker-entrypoint-initdb.d
       - doctor_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+  doctor-service:
+    build:
+      context: ../doctor-service
+      dockerfile: Dockerfile
+    container_name: doctor-service
+    depends_on:
+      - doctor-db
+    ports:
+      - "9092:9092"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
     networks:
       - episante_net
 
