@@ -1,187 +1,299 @@
-# EpiSanté CRUD Starter
+# 🏥 **EpiSante — Microservices Medical Platform**
 
-Spring Boot (Java 21) + React (Vite + Tailwind) + PostgreSQL. Two basic entities to begin the platform: **Patient** and **Doctor** with full CRUD, pagination, filtering, and CORS wired for the React app.
+_A fully containerized, production-ready microservices system inspired by Doctolib._
 
-## 1) Prerequisites
+EpiSante is a **distributed medical platform** built using a **microservices architecture**, where **each service runs in its own Docker container**, and each service has **its own dedicated PostgreSQL database** to ensure isolation, scalability, and clean DevOps practices.
 
-* Java 21 (Temurin / OpenJDK)
-* Node.js ≥ 20 + pnpm (or npm)
-* Docker + Docker Compose
+---
 
-## 2) Quickstart (Dev)
+# 🚀 **Main Technologies**
+
+- **Spring Boot 3+** (backend microservices)
+
+- **React + Vite + Tailwind** (frontend)
+
+- **PostgreSQL (one per service)**
+
+- **Docker & Docker Compose**
+
+- **Nginx Reverse Proxy** (gateway)
+
+- **Flyway** (DB migrations)
+
+- **Prometheus + Grafana** (monitoring)
+
+- **Loki** (logs)
+
+- **Mermaid diagrams** (architecture documentation)
+
+
+---
+
+# 📦 **Architecture Overview**
+
+EpiSante adopts a **real microservices architecture**:
+
+- Each business domain = **one microservice**
+
+- Each microservice = **one isolated PostgreSQL database**
+
+- Communication internal = **REST over Docker network**
+
+- External traffic routed through **Nginx Gateway**
+
+- Everything containerized
+
+
+---
+
+# 🧱 **Project Structure**
+
+```css
+episante/
+│
+├── patient-service/
+│   ├── src/main/java
+│   ├── src/main/resources/
+│   │     ├── application.yaml
+│   │     └── db/migration/
+│   │            ├── V1__init.sql
+│   │            └── V2__seed_patients.sql
+│   └── Dockerfile
+│
+├── doctor-service/
+├── appointment-service/
+├── auth-service/
+├── notification-service/
+│
+├── frontend/
+│
+├── gateway/
+│   └── nginx.conf
+│
+├── postgres/
+│   ├── patient-db/
+│   │     └── init/
+			├── V1__init.sql
+│   │       └── V2__seed_patients.sql
+│   ├── doctor-db/
+│   ├── appointment-db/
+│   ├── auth-db/
+│   └── notification-db/
+│
+├── infra/
+│   ├── docker-compose.yml
+│   ├── network/
+│   ├── certbot/
+│   └── scripts/
+│
+└── monitoring/
+    ├── grafana/
+    ├── prometheus/
+    └── loki/
+```
+
+---
+
+# 🔗 **Container Communication (Mermaid Diagram)**
+
+This diagram shows how each component talks to others inside Docker.
+```mermaid
+flowchart TD
+    %% Clients
+    User((User Browser))
+
+    %% External Proxy
+    Nginx[NGINX Reverse Proxy<br/>gateway]
+
+    %% Frontend
+    Frontend[Frontend React<br/>Container]
+
+    %% Services
+    PatientSvc[Patient Service<br/>Spring Boot]
+    DoctorSvc[Doctor Service<br/>Spring Boot]
+    AppointmentSvc[Appointment Service<br/>Spring Boot]
+    AuthSvc[Auth Service<br/>Spring Boot]
+    NotifSvc[Notification Service<br/>Spring Boot]
+
+    %% Databases
+    PatientDB[(patient-db<br/>PostgreSQL)]
+    DoctorDB[(doctor-db<br/>PostgreSQL)]
+    AppointmentDB[(appointment-db<br/>PostgreSQL)]
+    AuthDB[(auth-db<br/>PostgreSQL)]
+    NotifDB[(notification-db<br/>PostgreSQL)]
+
+    %% Connections
+    User -->|HTTPS| Nginx
+    Nginx --> Frontend
+    Nginx -->|/api/patients| PatientSvc
+    Nginx -->|/api/doctors| DoctorSvc
+    Nginx -->|/api/appointments| AppointmentSvc
+    Nginx -->|/api/auth| AuthSvc
+    Nginx -->|/api/notifications| NotifSvc
+
+    %% Microservices to DB
+    PatientSvc --> PatientDB
+    DoctorSvc --> DoctorDB
+    AppointmentSvc --> AppointmentDB
+    AuthSvc --> AuthDB
+    NotifSvc --> NotifDB
+
+```
+
+---
+
+# 🗄️ **Database Isolation Philosophy**
+
+Each microservice **owns its own schema and database**:
+
+|Microservice|Database|Purpose|
+|---|---|---|
+|patient-service|patientdb|Patients info|
+|doctor-service|doctordb|Doctors info|
+|appointment-service|appointmentdb|Appointment logic|
+|auth-service|authdb|Users + roles|
+|notification-service|notifdb|Email/SMS queue|
+
+This architecture provides:
+
+- Loose coupling
+
+- Independent scaling
+
+- Better security
+
+- Easier CI/CD
+
+- Failure isolation
+
+- True microservices practice
+
+
+---
+
+# 🐳 **Running the Project**
+
+Go to the infra folder:
 ```bash
-# 1) Start Postgres + pgAdmin
-cd infra && docker compose -f docker-compose.dev.yml up -d
+cd infra
+docker compose up -d
 
-# 2) Backend (Spring Boot)
-cd ../backend
-# if Maven
-./mvnw spring-boot:run
-# or if Gradle
-# ./gradlew bootRun
-
-# 3) Frontend (Vite + Tailwind)
-cd ../frontend
-cp .env.example .env
-pnpm i
-pnpm dev
 ```
 
-* API base URL: `http://localhost:8080`
-* Frontend dev server: `http://localhost:5173`
+This command starts:
 
-## 3) Configuration
+- All microservices
 
-### `backend/src/main/resources/application-dev.yml`
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/episante
-    username: episante
-    password: episante
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
-  flyway:
-    enabled: true
+- All PostgreSQL DBs
 
-server:
-  port: 8080
+- Nginx gateway
 
-cors:
-  allowed-origins: ["http://localhost:5173"]
-```
+- Monitoring stack
 
-### `infra/env/postgres.env`
-```
-POSTGRES_DB=episante
-POSTGRES_USER=episante
-POSTGRES_PASSWORD=episante
-```
+- Frontend
 
-### `infra/docker-compose.dev.yml`
-```yaml
-version: "3.9"
-services:
-  db:
-    image: postgres:16
-    container_name: episante_db
-    env_file: ./env/postgres.env
-    ports: ["5432:5432"]
-    volumes:
-      - dbdata:/var/lib/postgresql/data
-  pgadmin:
-    image: dpage/pgadmin4:8
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports: ["5050:80"]
-    depends_on: [db]
-volumes:
-  dbdata:
-```
 
-## 4) Domain Model
+To see running containers:
 
-* **Patient**: `id`, `firstName`, `lastName`, `email`, `phone`, `dob`, `gender` (ENUM), `createdAt`, `updatedAt`
-* **Doctor**: `id`, `firstName`, `lastName`, `email`, `phone`, `specialty`, `rpps`, `clinicAddress`, `createdAt`, `updatedAt`
-
-Flyway migration `V1__init.sql` creates tables + indexes.
-
-## 5) API (excerpt)
-
-* `GET /api/patients?page&size&search`
-* `POST /api/patients`
-* `GET /api/patients/{id}`
-* `PUT /api/patients/{id}`
-* `DELETE /api/patients/{id}`
-* Same for `/api/doctors`.
-
-## 6) Frontend routes
-
-* `/patients` list with search + pagination
-* `/patients/new` create
-* `/patients/:id` view/edit
-* `/doctors` … analog
-
-## 7) Testing
-
-* Backend: JUnit 5 + Spring Boot test slices + Testcontainers (optional)
-* Frontend: Vitest + React Testing Library
-
-## 8) Lint & format
-
-* Backend: Spotless (Google Java Format)
-* Frontend: ESLint + Prettier
-
-## 9) Building
 ```bash
-# backend
-./mvnw -DskipTests package
-# frontend
-pnpm build
+docker ps
 ```
 
-## 10) Security notes (dev)
+To see logs of a specific service:
 
-* This starter is dev-focused (no auth). Add Keycloak later.
-* Never commit real secrets. For production, wire Vault/Keycloak.
-
-## Useful Snippets
-
-### Flyway `V1__init.sql` (example)
-```sql
-CREATE TYPE gender AS ENUM ('MALE','FEMALE','OTHER');
-
-CREATE TABLE patients (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  first_name   VARCHAR(80) NOT NULL,
-  last_name    VARCHAR(80) NOT NULL,
-  email        VARCHAR(120) UNIQUE NOT NULL,
-  phone        VARCHAR(30),
-  dob          DATE,
-  gender       gender,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE doctors (
-  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  first_name     VARCHAR(80) NOT NULL,
-  last_name      VARCHAR(80) NOT NULL,
-  email          VARCHAR(120) UNIQUE NOT NULL,
-  phone          VARCHAR(30),
-  specialty      VARCHAR(80) NOT NULL,
-  rpps           VARCHAR(30),
-  clinic_address TEXT,
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_patients_name ON patients (last_name, first_name);
-CREATE INDEX idx_doctors_specialty ON doctors (specialty);
+```bash
+docker logs patient-service
+docker logs patient-db
 ```
 
-### Spring CORS (example)
-```java
-@Bean
-CorsConfigurationSource corsConfigurationSource() {
-  var cfg = new CorsConfiguration();
-  cfg.setAllowedOrigins(List.of("http://localhost:5173"));
-  cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-  cfg.setAllowedHeaders(List.of("*"));
-  var source = new UrlBasedCorsConfigurationSource();
-  source.registerCorsConfiguration("/**", cfg);
-  return source;
-}
+---
+
+# 🧪 **Database Initialization**
+
+Every database is initialized automatically through:
+
+```bash
+postgres/<service>-db/init/*.sql
 ```
 
-### Frontend fetch helper (TypeScript)
-```ts
-export const api = (path: string, init?: RequestInit) =>
-  fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  }).then(async r => r.ok ? r.json() : Promise.reject(await r.json()));
+These scripts run _only on first DB creation_ and handle:
+
+- Schema creation
+
+- Seed data
+
+- Migration versioning (compatible with Flyway)
+
+
+---
+
+# 📡 **Service Endpoints**
+
+|Service|Port|Example|
+|---|---|---|
+|patient-service|8081|`/api/patients`|
+|doctor-service|8082|`/api/doctors`|
+|appointment-service|8083|`/api/appointments`|
+|auth-service|8084|`/api/auth/login`|
+|notification-service|8085|`/api/notify`|
+|frontend|3000|React app|
+|nginx|80/443|gateway|
+
+---
+
+# 📊 **Monitoring**
+
+### After running:
+
+```bash
+http://localhost:3000  - Grafana
+http://localhost:9090  - Prometheus
+http://localhost:3100  - Loki
 ```
+
+Dashboards:
+
+- JVM metrics
+
+- Spring Boot metrics
+
+- Database metrics
+
+- Container metrics
+
+
+---
+
+# 🛡️ **Reverse Proxy (Nginx)**
+
+All traffic enters through the gateway:
+
+```bash
+/api/patients → patient-service
+/api/doctors → doctor-service
+```
+
+This ensures:
+
+- HTTPS termination
+
+- Rate limiting (optional)
+
+- Authentication (optional)
+
+- Logging and auditability
+
+
+---
+
+# 🧩 **Next Steps**
+
+Planned extensions:
+
+- Add Kafka for event-driven communication
+
+- Add Redis for caching
+
+- Integrate Keycloak for authentication
+
+- Add Spark or Python ML service

@@ -1,0 +1,34 @@
+services:
+  patient-db:
+    image: postgres:16
+    container_name: patient-db
+    environment:
+      POSTGRES_DB: patientdb
+      POSTGRES_USER: patient_user
+      POSTGRES_PASSWORD: patient_pass
+    volumes:
+      - ../postgres/patient-db/init:/docker-entrypoint-initdb.d
+      - patient_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+  doctor-db:
+    image: postgres:16
+    container_name: doctor-db
+    environment:
+      POSTGRES_DB: doctordb
+      POSTGRES_USER: doctor_user
+      POSTGRES_PASSWORD: doctor_pass
+    volumes:
+      - ../postgres/doctor-db/init:/docker-entrypoint-initdb.d
+      - doctor_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+volumes:
+  patient_data:
+  doctor_data:
+
+networks:
+  episante_net:
+    driver: bridge

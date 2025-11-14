@@ -1,0 +1,53 @@
+
+# Node / frontend artifacts
+node_modules/
+dist/
+dist-ssr/
+.svelte-kit/
+.nuxt/
+.next/
+.vite/
+build/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Environment files : for now we keep .env files out of the repo
+# .env
+# .env.local
+# .env.*.local
+# !.env.example
+# !.env.template
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Java / Maven builds
+target/
+**/target/
+.classpath
+.project
+.settings/
+dependency-reduced-pom.xml
+
+# IDE and editor folders
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Docker / runtime data
+docker-data/
+tmp/
