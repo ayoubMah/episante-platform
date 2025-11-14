@@ -231,11 +231,11 @@ These scripts run _only on first DB creation_ and handle:
 
 |Service|Port|Example|
 |---|---|---|
-|patient-service|8081|`/api/patients`|
-|doctor-service|8082|`/api/doctors`|
-|appointment-service|8083|`/api/appointments`|
-|auth-service|8084|`/api/auth/login`|
-|notification-service|8085|`/api/notify`|
+|patient-service|9091|`/api/patients`|
+|doctor-service|9092|`/api/doctors`|
+|appointment-service|9093|`/api/appointments`|
+|auth-service|9094|`/api/auth/login`|
+|notification-service|9095|`/api/notify`|
 |frontend|3000|React app|
 |nginx|80/443|gateway|
 

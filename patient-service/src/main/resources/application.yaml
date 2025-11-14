@@ -23,7 +23,7 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 9090
+  port: 9091
 
 logging:
   level:
@@ -48,7 +48,7 @@ logging:
 #    password: patient_pass
 #
 #server:
-#  port: 8081
+#  port: 9091
 #
 #---
 ## ----------------------------------------------------
@@ -66,4 +66,4 @@ logging:
 #    password: patient_pass
 #
 #server:
-#  port: 8081
+#  port: 9091
