@@ -72,9 +72,6 @@ episante/
 │
 ├── postgres/
 │   ├── patient-db/
-│   │     └── init/
-			├── V1__init.sql
-│   │       └── V2__seed_patients.sql
 │   ├── doctor-db/
 │   ├── appointment-db/
 │   ├── auth-db/

@@ -1,19 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+import axios from 'axios';
 
-// FIX: The 'export' keyword MUST be here
-export interface Patient {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  dob?: string;
-  gender?: 'MALE' | 'FEMALE';
-  createdAt?: string;
-  updatedAt?: string;
-}
+const api = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-// FIX: The 'export' keyword MUST be here
 export interface Doctor {
   id?: string;
   firstName: string;
@@ -23,56 +16,32 @@ export interface Doctor {
   specialty: string;
   rpps?: string;
   clinicAddress?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
-async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `HTTP ${response.status}`);
-  }
-
-  const text = await response.text();
-  // Return the parsed JSON if text exists, otherwise return an empty object
-  // This handles DELETE requests that might not return a body
-  return text ? JSON.parse(text) : ({} as T);
+export interface Patient {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  // LocalDate in Java expects "YYYY-MM-DD" string
+  dob?: string;
+  // Java Enum requires exact uppercase match
+  gender?: 'MALE' | 'FEMALE';
 }
 
-// Patient API
-export const patientApi = {
-  getAll: () => fetchApi<Patient[]>('/api/patients'),
-  getOne: (id: string) => fetchApi<Patient>(`/api/patients/${id}`),
-  create: (data: Patient) => fetchApi<Patient>('/api/patients', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id: string, data: Patient) => fetchApi<Patient>(`/api/patients/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  delete: (id: string) => fetchApi<void>(`/api/patients/${id}`, { method: 'DELETE' }),
+export const doctorApi = {
+  getAll: async () => (await api.get<Doctor[]>('/doctors')).data,
+  getOne: async (id: string) => (await api.get<Doctor>(`/doctors/${id}`)).data,
+  create: async (data: Doctor) => (await api.post<Doctor>('/doctors', data)).data,
+  update: async (id: string, data: Doctor) => (await api.put<Doctor>(`/doctors/${id}`, data)).data,
+  delete: async (id: string) => (await api.delete(`/doctors/${id}`)),
 };
 
-// Doctor API
-export const doctorApi = {
-  getAll: () => fetchApi<Doctor[]>('/api/doctors'),
-  getOne: (id: string) => fetchApi<Doctor>(`/api/doctors/${id}`),
-  create: (data: Doctor) => fetchApi<Doctor>('/api/doctors', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  update: (id: string, data: Doctor) => fetchApi<Doctor>(`/api/doctors/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  delete: (id: string) => fetchApi<void>(`/api/doctors/${id}`, { method: 'DELETE' }),
+export const patientApi = {
+  getAll: async () => (await api.get<Patient[]>('/patients')).data,
+  getOne: async (id: string) => (await api.get<Patient>(`/patients/${id}`)).data,
+  create: async (data: Patient) => (await api.post<Patient>('/patients', data)).data,
+  update: async (id: string, data: Patient) => (await api.put<Patient>(`/patients/${id}`, data)).data,
+  delete: async (id: string) => (await api.delete(`/patients/${id}`)),
 };

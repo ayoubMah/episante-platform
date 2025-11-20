@@ -1,4 +1,27 @@
 services:
+
+# --- The Gateway ---
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "8089:80"  # The ONLY port exposed to your machine!
+    volumes:
+      - ../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - doctor-service
+      - patient-service
+    networks:
+      - episante_net
+
+  # --- Frontend ---
+  frontend:
+    build: ../frontend
+    # We DO NOT expose ports here (no "3000:80").
+    # Only the Gateway talks to the frontend container.
+    networks:
+      - episante_net
+
   patient-db:
     image: postgres:16
     container_name: patient-db
@@ -12,17 +35,24 @@ services:
     networks:
       - episante_net
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   patient-service:
     build:
       context: ../patient-service
       dockerfile: Dockerfile
     container_name: patient-service
     depends_on:
-      - patient-db
+      patient-db:
+        condition: service_healthy  # <--- Waits for "pg_isready" to return true
     ports:
       - "9091:9091"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://patient-db:5432/patientdb
     networks:
       - episante_net
 
@@ -38,6 +68,11 @@ services:
       - doctor_data:/var/lib/postgresql/data
     networks:
       - episante_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   doctor-service:
     build:
@@ -45,11 +80,12 @@ services:
       dockerfile: Dockerfile
     container_name: doctor-service
     depends_on:
-      - doctor-db
+      doctor-db:
+        condition: service_healthy  # <--- Waits for "pg_isready" to return true
     ports:
       - "9092:9092"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://doctor-db:5432/doctordb
     networks:
       - episante_net
 

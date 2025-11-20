@@ -17,32 +17,27 @@ export default function PatientList() {
       setPatients(data);
     } catch (error) {
       console.error('Failed to load patients:', error);
-      alert('Failed to load patients');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this patient?')) {
+    if (window.confirm('Are you sure?')) {
       try {
         await patientApi.delete(id);
-        // Refresh the list after deletion
         loadPatients();
       } catch (error) {
-        console.error('Failed to delete patient:', error);
-        alert('Failed to delete patient');
+        alert('Failed to delete');
       }
     }
   };
 
-  if (loading) {
-    return <div>Loading patients...</div>;
-  }
+  if (loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <div className="max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-6xl mx-auto">
+       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
         <Link to="/patients/new" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           Add Patient
@@ -53,23 +48,23 @@ export default function PatientList() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Birth</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gender</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DOB</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {patients.map((patient) => (
-              <tr key={patient.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{patient.firstName} {patient.lastName}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{patient.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{patient.dob || 'N/A'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link to={`/patients/edit/${patient.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</Link>
-                  <button onClick={() => handleDelete(patient.id!)} className="text-red-600 hover:text-red-900">
-                    Delete
-                  </button>
+            {patients.map((p) => (
+              <tr key={p.id}>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.firstName} {p.lastName}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{p.email}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{p.gender}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{p.dob}</td>
+                <td className="px-6 py-4 text-right text-sm font-medium space-x-4">
+                  <Link to={`/patients/edit/${p.id}`} className="text-indigo-600 hover:text-indigo-900">Edit</Link>
+                  <button onClick={() => handleDelete(p.id!)} className="text-red-600 hover:text-red-900">Delete</button>
                 </td>
               </tr>
             ))}

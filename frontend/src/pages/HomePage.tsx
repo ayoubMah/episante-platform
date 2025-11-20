@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiSearch, FiUser, FiCalendar, FiBriefcase, FiPlusCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiSearch, FiUser, FiCalendar, FiPlusCircle, FiCheckCircle } from 'react-icons/fi';
 
 export default function HomePage() {
   return (
@@ -104,10 +104,10 @@ export default function HomePage() {
           </div>
           <div className="hidden md:block">
             {/* Replace with a high-quality image. You can get free ones from Unsplash or Pexels. */}
-            <img 
-              className="rounded-lg shadow-xl" 
-              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070" 
-              alt="Doctor with a patient on a tablet" 
+            <img
+              className="rounded-lg shadow-xl"
+              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070"
+              alt="Doctor with a patient on a tablet"
             />
           </div>
         </div>
@@ -117,9 +117,9 @@ export default function HomePage() {
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-center">
            <div className="hidden md:block">
-            <img 
-              className="rounded-lg shadow-xl" 
-              src="https://images.unsplash.com/photo-1550831107-1553da8c8464?q=80&w=1887" 
+            <img
+              className="rounded-lg shadow-xl"
+              src="https://images.unsplash.com/photo-1550831107-1553da8c8464?q=80&w=1887"
               alt="Doctor reviewing files"
             />
           </div>
