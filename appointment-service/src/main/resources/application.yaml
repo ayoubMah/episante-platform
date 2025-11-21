@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: appointment-service
+
+  datasource:
+    url: jdbc:postgresql://appointment-db:5432/appointmentdb
+    username: appointment_user
+    password: appointment_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: 9093
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG   # disable in production
+    org.hibernate.type.descriptor.sql: TRACE
+
+---
+# ? External service URLs (used by Feign clients)
+application:
+  config:
+    patient-url: http://patient-service:9091
+    doctor-url: http://doctor-service:9092

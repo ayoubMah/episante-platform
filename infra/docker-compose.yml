@@ -11,6 +11,7 @@ services:
       - frontend
       - doctor-service
       - patient-service
+      - appointment-service
     networks:
       - episante_net
 
@@ -30,13 +31,12 @@ services:
       POSTGRES_USER: patient_user
       POSTGRES_PASSWORD: patient_pass
     volumes:
-      - ../postgres/patient-db/init:/docker-entrypoint-initdb.d
       - patient_data:/var/lib/postgresql/data
     networks:
       - episante_net
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U patient_user"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -64,12 +64,11 @@ services:
       POSTGRES_USER: doctor_user
       POSTGRES_PASSWORD: doctor_pass
     volumes:
-      - ../postgres/doctor-db/init:/docker-entrypoint-initdb.d
       - doctor_data:/var/lib/postgresql/data
     networks:
       - episante_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U doctor_user"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -89,9 +88,45 @@ services:
     networks:
       - episante_net
 
+  appointment-db:
+    image: postgres:16
+    container_name: appointment-db
+    environment:
+      POSTGRES_DB: appointmentdb
+      POSTGRES_USER: appointment_user
+      POSTGRES_PASSWORD: appointment_pass
+    volumes:
+      - appointment_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appointment_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  appointment-service:
+    build:
+      context: ../appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    depends_on:
+      appointment-db:
+        condition: service_healthy
+    ports:
+      - "9093:9093"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://appointment-db:5432/appointmentdb
+    networks:
+      - episante_net
+
+
+
 volumes:
   patient_data:
   doctor_data:
+  appointment_data:
+
 
 networks:
   episante_net:
