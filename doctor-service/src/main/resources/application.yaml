@@ -32,38 +32,3 @@ logging:
     org.hibernate.SQL: DEBUG   # disable in prod
     org.hibernate.type.descriptor.sql: TRACE
 
----
-# ----------------------------------------------------
-# DEV PROFILE (used locally)
-# ----------------------------------------------------
-#spring:
-#  config:
-#    activate:
-#      on-profile: dev
-#
-#spring:
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/doctordb
-#    username: doctor_user
-#    password: doctor_pass
-#
-#server:
-#  port: 9092
-#
-#---
-## ----------------------------------------------------
-## PROD PROFILE (used in Docker + VM deployment)
-## ----------------------------------------------------
-#spring:
-#  config:
-#    activate:
-#      on-profile: prod
-#
-#spring:
-#  datasource:
-#    url: jdbc:postgresql://patient-db:5432/doctordb
-#    username: doctor_user
-#    password: doctor_pass
-#
-#server:
-#  port: 9092

@@ -6,7 +6,11 @@ import DoctorList from './pages/doctors/DoctorList';
 import DoctorForm from './pages/doctors/DoctorForm';
 import PatientList from './pages/patients/PatientList';
 // Make sure you create this PatientForm.tsx file next
-import PatientForm from './pages/patients/PatientForm'; 
+import PatientForm from './pages/patients/PatientForm';
+import AppointmentDetails from './pages/appointments/AppointmentDetails';
+import AppointmentList from './pages/appointments/AppointmentList';
+import AppointmentForm from './pages/appointments/AppointmentDetails';
+
 
 function App() {
   return (
@@ -28,8 +32,8 @@ function App() {
                     to="/doctors"
                     className={({ isActive }) =>
                       `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                        isActive 
-                          ? 'border-blue-500 text-gray-900' 
+                        isActive
+                          ? 'border-blue-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                       }`
                     }
@@ -40,8 +44,8 @@ function App() {
                     to="/patients"
                     className={({ isActive }) =>
                       `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                        isActive 
-                          ? 'border-blue-500 text-gray-900' 
+                        isActive
+                          ? 'border-blue-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                       }`
                     }
@@ -70,7 +74,13 @@ function App() {
               <Route path="/patients" element={<PatientList />} />
               <Route path="/patients/new" element={<PatientForm />} />
               <Route path="/patients/edit/:id" element={<PatientForm />} />
+              {/* Appointment Routes */}
+              <Route path="/appointments" element={<AppointmentList />} />
+              <Route path="/appointments/new" element={<AppointmentForm />} />
+              <Route path="/appointments/edit/:id" element={<AppointmentForm />} />
+              <Route path="/appointments/:id/details" element={<AppointmentDetails />} />
             </Routes>
+
           </div>
         </main>
       </div>

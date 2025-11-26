@@ -9,6 +9,6 @@ public class DoctorResponseDTO {
     private UUID id;
     private String firstName;
     private String lastName;
-    private String specialization;
+    private String specialty;
     private String email;
 }

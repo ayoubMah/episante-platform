@@ -9,7 +9,6 @@ import java.util.UUID;
 public class Doctor {
 
     @Id
-    @GeneratedValue
     private UUID id;
 
     @Column(nullable = false)
@@ -23,16 +22,22 @@ public class Doctor {
 
     private String phone;
     private String specialty;
-    private String rpps; // professional ID
+    private String rpps;
     private String clinicAddress;
 
+    @Column(nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
+
+    @Column(nullable = false)
     private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     // Constructors
-    public Doctor() {}
+    public Doctor() {
+        this.id = UUID.randomUUID();
+    }
 
     public Doctor(String firstName, String lastName, String email, String phone, String specialty, String rpps, String clinicAddress) {
+        this.id = UUID.randomUUID();
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;

@@ -26,6 +26,13 @@ export default function HomePage() {
             >
               Manage Doctors
             </Link>
+            <Link
+              to="/appointments"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+            >
+              Manage Appointments
+            </Link>
+
           </div>
         </div>
       </section>

@@ -32,6 +32,14 @@ logging:
     org.hibernate.SQL: DEBUG   # disable in production
     org.hibernate.type.descriptor.sql: TRACE
 
+cloud:
+  openfeign:
+    client:
+      config:
+        default:
+          connectTimeout: 5000 # 5 seconds to connect
+          readTimeout: 5000    # 5 seconds to wait for data
+
 ---
 # ? External service URLs (used by Feign clients)
 application:

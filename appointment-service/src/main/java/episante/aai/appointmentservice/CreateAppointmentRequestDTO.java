@@ -11,5 +11,5 @@ public class CreateAppointmentRequestDTO {
     private UUID patientId;
     private OffsetDateTime startTime;
     private OffsetDateTime endTime;
-    private AppointmentStatus status;
 }
+
