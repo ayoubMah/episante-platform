@@ -8,13 +8,31 @@ import java.util.UUID;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
 
+    // CREATE — check overlaps
     @Query("""
-    SELECT COUNT(a) > 0 FROM Appointment a
-    WHERE a.doctorId = :doctorId
-    AND a.status != 'CANCELED'
-    AND (
-        (a.startTime < :newEndTime AND a.endTime > :newStartTime)
-    )
-""")
-    boolean existsOverlappingAppointment(UUID doctorId, OffsetDateTime newStartTime, OffsetDateTime newEndTime);
+        SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+        FROM Appointment a
+        WHERE a.doctorId = :doctorId
+          AND (a.startTime < :endTime AND a.endTime > :startTime)
+        """)
+    boolean existsOverlappingAppointment(
+            UUID doctorId,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime
+    );
+
+    // UPDATE — check overlaps but ignore this appointment
+    @Query("""
+        SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+        FROM Appointment a
+        WHERE a.doctorId = :doctorId
+          AND a.id <> :ignoreId
+          AND (a.startTime < :endTime AND a.endTime > :startTime)
+        """)
+    boolean existsOverlappingAppointment(
+            UUID doctorId,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime,
+            UUID ignoreId
+    );
 }

@@ -15,8 +15,7 @@ import java.util.UUID;
 public class Patient {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) 
-    private UUID id;
+    private UUID id;   // 🔥 NO @GeneratedValue → ID comes from auth-service
 
     @Column(nullable = false, length = 80)
     private String firstName;
@@ -32,12 +31,10 @@ public class Patient {
 
     private LocalDate dob;
 
-    // This replaces your Converter. It stores "MALE" or "FEMALE" in the DB.
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private Gender gender;
 
-    // @CreationTimestamp is the "Pro" way to handle dates automatically
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;

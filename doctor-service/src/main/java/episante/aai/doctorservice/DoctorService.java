@@ -1,6 +1,9 @@
 package episante.aai.doctorservice;
 
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +14,22 @@ public class DoctorService {
 
     public DoctorService(DoctorRepository repo) {
         this.repo = repo;
+    }
+
+    public void createProfile(DoctorProfileRequest req) {
+
+        Doctor d = new Doctor();
+        d.setId(req.getId());                    
+        d.setFirstName(req.getFirstName());
+        d.setLastName(req.getLastName());
+        d.setEmail(req.getEmail());
+        d.setSpecialty(req.getSpecialty());
+        d.setRpps(req.getRppsNumber());
+        d.setClinicAddress(req.getAddress());
+        d.setCreatedAt(OffsetDateTime.now());
+        d.setUpdatedAt(OffsetDateTime.now());
+
+        repo.save(d);
     }
 
     public List<Doctor> findAll() {

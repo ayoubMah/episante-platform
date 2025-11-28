@@ -44,7 +44,7 @@ public class AppointmentService {
             throw new RuntimeException("Doctor Service is down or unreachable");
         }
 
-        // 3. Check if doctor already booked
+        // 3. Check if doctor already booked for this time slot
         if (repository.existsOverlappingAppointment(
                 request.getDoctorId(),
                 request.getStartTime(),
@@ -129,6 +129,96 @@ public class AppointmentService {
         }
 
         return dto;
+    }
+    // ------------------------------------------------------
+    // UPDATE APPOINTMENT
+    // ------------------------------------------------------
+    public AppointmentResponseDTO update(UUID id, CreateAppointmentRequestDTO request) {
+
+        // 1. Load existing appointment
+        Appointment existing = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        // 2. Validate: cannot modify past appointments
+        if (existing.getStartTime().isBefore(OffsetDateTime.now())) {
+            throw new IllegalStateException("Cannot update past appointments.");
+        }
+
+        // 3. Validate doctor remains the same OR if changed, validate again
+        if (!existing.getDoctorId().equals(request.getDoctorId())) {
+            // Validate new doctor
+            try {
+                doctorClient.getDoctorById(request.getDoctorId());
+            } catch (FeignException.NotFound e) {
+                throw new IllegalArgumentException("Doctor not found: " + request.getDoctorId());
+            }
+        }
+
+        // 4. Validate patient remains the same OR if changed, validate again
+        if (!existing.getPatientId().equals(request.getPatientId())) {
+            try {
+                patientClient.getPatientById(request.getPatientId());
+            } catch (FeignException.NotFound e) {
+                throw new IllegalArgumentException("Patient not found: " + request.getPatientId());
+            }
+        }
+
+        // 5. Prevent overlapping bookings for the doctor
+        boolean overlapping = repository.existsOverlappingAppointment(
+                request.getDoctorId(),
+                request.getStartTime(),
+                request.getEndTime(),
+                id // ignore this appointment itself
+        );
+
+        if (overlapping) {
+            throw new IllegalStateException("Doctor is already booked for this time range.");
+        }
+
+        // 6. Update fields
+        existing.setDoctorId(request.getDoctorId());
+        existing.setPatientId(request.getPatientId());
+        existing.setStartTime(request.getStartTime());
+        existing.setEndTime(request.getEndTime());
+        existing.setUpdatedAt(OffsetDateTime.now());
+
+        // 7. Save
+        Appointment saved = repository.save(existing);
+
+        // 8. Convert to DTO
+        return toResponse(saved);
+    }
+
+
+    // ------------------------------------------------------
+    // DELETE APPOINTMENT
+    // ------------------------------------------------------
+    public void delete(UUID id) {
+
+        Appointment existing = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        // Business rule:
+        // Allow deleting only upcoming or planned appointments
+        if (existing.getStartTime().isBefore(OffsetDateTime.now())) {
+            throw new IllegalStateException("Cannot delete past appointments.");
+        }
+
+        repository.delete(existing);
+    }
+
+    // Helper method to extract patientId (used for @PreAuthorize)
+    public UUID getPatientId(UUID appointmentId) {
+        return repository.findById(appointmentId)
+                .map(Appointment::getPatientId)
+                .orElse(null);
+    }
+
+    // Helper method to extract doctorId (used for @PreAuthorize)
+    public UUID getDoctorId(UUID appointmentId) {
+        return repository.findById(appointmentId)
+                .map(Appointment::getDoctorId)
+                .orElse(null);
     }
 
 }

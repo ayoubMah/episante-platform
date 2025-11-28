@@ -1,6 +1,8 @@
 package episante.aai.patientservice;
 
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +13,23 @@ public class PatientService {
     public PatientService(PatientRepository repo) {
         this.repo = repo;
     }
+
+    public void createProfile(PatientProfileRequest req) {
+
+        Patient p = new Patient();
+        p.setId(req.getId());
+        p.setFirstName(req.getFirstName());
+        p.setLastName(req.getLastName());
+        p.setEmail(req.getEmail());
+        p.setPhone(req.getPhone());
+
+        if (req.getDob() != null) {
+            p.setDob(LocalDate.parse(req.getDob()));
+        }
+        // Gender can stay null (if NOT required in DB)
+        repo.save(p);  // createdAt and updatedAt auto-filled
+    }
+
 
     public List<Patient> findAll() { return repo.findAll(); }
 
