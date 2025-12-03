@@ -9,107 +9,128 @@ EpiSante is a **distributed medical platform** built using a **microservices arc
 
 ```mermaid
 flowchart TB
+    %% --- STYLING ---
+    classDef vm fill:#f4f4f4,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef microservice fill:#fff3e0,stroke:#f57c00,stroke-width:2px,rx:5,ry:5;
+    classDef db fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,shape:cylinder;
+    classDef component fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef vault fill:#212121,stroke:#000,stroke-width:2px,color:#fff;
+    classDef bigdata fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
-%% USER + FIREWALL
-subgraph FIREWALL["Firewall VM - Reverse Proxy"]
-    RP[Reverse Proxy / Gateway]
-end
-UB[User Browser] --> RP
-
-%% FRONTEND
-subgraph FRONT["Frontend VM"]
-    FE[React Frontend]
-end
-RP --> FE
-
-%% BACKEND
-subgraph BACKEND["Backend VM - Microservices"]
-    subgraph MS["Spring Boot Services"]
-        PATIENT[Patient Service]
-        DOCTOR[Doctor Service]
-        APPT[Appointment Service]
-        INGEST[Ingest Wearables]
-        ALERT[Health Alert Engine]
+    %% --- TOP LEVEL: USER & GATEWAY ---
+    subgraph S_FW [Firewall / Gateway]
+        RP[Reverse Proxy / Gateway]:::component
     end
-    PATIENT_DB[(Patient DB)]
-    DOCTOR_DB[(Doctor DB)]
-    APPT_DB[(Appointments DB)]
-    INGEST_DB[(Wearables DB)]
-    ALERT_DB[(Alerts DB)]
-end
-FE --> MS
-PATIENT --> PATIENT_DB
-DOCTOR --> DOCTOR_DB
-APPT --> APPT_DB
-INGEST --> INGEST_DB
-ALERT --> ALERT_DB
 
-%% KEY VAULT
-subgraph VAULT["Key Vault"]
-    KV[Secrets: DB Pass, JWT, Kafka]
-end
-KV --> PATIENT
-KV --> DOCTOR
-KV --> APPT
-KV --> INGEST
-KV --> ALERT
+    User(User Browser):::component --> RP
 
-%% KAFKA
-subgraph KAFKA_VM["Kafka VM"]
-    KAFKA[Kafka Cluster]
-end
-INGEST -->|publish readings| KAFKA
-KAFKA -->|consume to detect issues| ALERT
-ALERT --> DOCTOR
+    %% --- FRONTEND ---
+    subgraph S_FRONT [Frontend VM]
+        FE[React Frontend]:::microservice
+    end
+    RP --> FE
 
-%% SPARK (Realtime)
-subgraph SPARK_RT["Spark VM - Realtime"]
-    SPARK[Apache Spark Streaming]
-end
-KAFKA -->|realtime stream| SPARK
-SPARK -->|publish alerts| KAFKA
+    %% --- BACKEND ---
+    subgraph S_BACK [Backend VM - Microservices]
+        direction TB
 
-%% BIG DATA (Anir)
-subgraph SCRAPING["PySpark Scraping"]
-    SCRAPER[PySpark Jobs]
-end
+        %% Grouping Services with their DBs logically
+        subgraph G_PAT [ ]
+            style G_PAT fill:none,stroke:none
+            PAT[Patient Service]:::microservice --> PAT_DB[(Patient DB)]:::db
+        end
 
-subgraph HDFS_BRONZE["Hadoop - Bronze Layer"]
-    HDFS[(HDFS Raw Data)]
-end
+        subgraph G_DOC [ ]
+            style G_DOC fill:none,stroke:none
+            DOC[Doctor Service]:::microservice --> DOC_DB[(Doctor DB)]:::db
+        end
 
-subgraph SILVER["MongoDB - Silver Layer"]
-    SILVER_DB[(Cleaned Data)]
-end
+        subgraph G_APPT [ ]
+            style G_APPT fill:none,stroke:none
+            APPT[Appointment Service]:::microservice --> APPT_DB[(Appt DB)]:::db
+        end
 
-subgraph GOLD["Postgres - Gold Layer"]
-    GOLD_DB[(Analytical Warehouse)]
-end
+        subgraph G_ING [ ]
+            style G_ING fill:none,stroke:none
+            INGEST[Ingest Wearables]:::microservice --> INGEST_DB[(Wearables DB)]:::db
+        end
 
-subgraph BI["Power BI"]
-    PBI[Dashboards]
-end
+        subgraph G_ALERT [ ]
+            style G_ALERT fill:none,stroke:none
+            ALERT[Health Alert Engine]:::microservice --> ALERT_DB[(Alerts DB)]:::db
+        end
+    end
 
-%% Links: Microservices <-> Big Data
+    %% Routing Flow
+    RP --> PAT
+    RP --> DOC
+    RP --> APPT
+    RP --> INGEST
+    RP --> ALERT
 
-%% Real-time medical readings exported to Big Data
-KAFKA -->|mirror topic| HDFS
+    %% Frontend logical communication
+    FE -.-> RP
 
-%% Alerts stored for ML training
-ALERT -->|export alerts| HDFS
+    %% --- KEY VAULT (Kept clean with dotted lines) ---
+    subgraph S_SEC [Security]
+        KV[Key Vault<br/>Secrets/Certs]:::vault
+    end
+    KV -.-> PAT
+    KV -.-> DOC
+    KV -.-> APPT
+    KV -.-> INGEST
+    KV -.-> ALERT
 
-%% Scraper (web/API) -> Demo data -> Bronze
-SCRAPER --> HDFS
+    %% --- REALTIME STREAMING ---
+    subgraph S_KAFKA [Kafka VM]
+        KAFKA{Kafka Cluster}:::component
+    end
 
-%% Bronze -> Silver -> Gold
-HDFS -->|Spark ETL| SILVER_DB
-SILVER_DB -->|Spark ETL| GOLD_DB
+    subgraph S_SPARK_RT [Spark VM - Realtime]
+        SPARK_RT[Spark Streaming]:::component
+    end
 
-%% BI reading from Gold layer
-GOLD_DB --> PBI
+    %% Streaming Loops
+    INGEST -->|1. Publish Readings| KAFKA
+    KAFKA -->|2. Stream| SPARK_RT
+    SPARK_RT -->|3. Publish Alerts| KAFKA
+    KAFKA -->|4. Consume Alerts| ALERT
+    ALERT -->|5. Notify| DOC
 
-%% Backend reading analytics
-DOCTOR -->|analytics API| GOLD_DB
+    %% --- BIG DATA ANALYTICS PIPELINE ---
+    %% Grouping the whole ETL pipeline
+    subgraph S_ANALYTICS [Big Data & Analytics Pipeline]
+        direction LR
+
+        subgraph SRC [Sources]
+            SCRAPER[PySpark Scraper]:::bigdata
+        end
+
+        subgraph DATA_LAKE [Data Lake]
+            HDFS[(Hadoop HDFS<br/>Bronze Layer)]:::db
+            MONGO[(MongoDB<br/>Silver Layer)]:::db
+            POSTGRES[(Postgres<br/>Gold Layer)]:::db
+        end
+
+        BI[Power BI<br/>Dashboards]:::component
+
+        %% Pipeline Flow
+        SCRAPER --> HDFS
+        HDFS -->|Spark ETL| MONGO
+        MONGO -->|Spark ETL| POSTGRES
+        POSTGRES --> BI
+    end
+
+    %% --- CROSS-SYSTEM CONNECTIONS ---
+    %% Connecting Operational to Analytical
+    KAFKA -.->|Mirror Topic| HDFS
+    ALERT_DB -.->|Export History| HDFS
+
+    %% Analytics Feedback Loop
+    DOC o--o|Analytics API| POSTGRES
+
+    %% Apply Subgraph Styles
+    class S_FW,S_FRONT,S_BACK,S_KAFKA,S_SPARK_RT,S_ANALYTICS vm
 ```
 
 ---
