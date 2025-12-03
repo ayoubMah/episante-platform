@@ -6,6 +6,114 @@ EpiSante is a **distributed medical platform** built using a **microservices arc
 
 ---
 
+
+```mermaid
+flowchart TB
+
+%% USER + FIREWALL
+subgraph FIREWALL["Firewall VM - Reverse Proxy"]
+    RP[Reverse Proxy / Gateway]
+end
+UB[User Browser] --> RP
+
+%% FRONTEND
+subgraph FRONT["Frontend VM"]
+    FE[React Frontend]
+end
+RP --> FE
+
+%% BACKEND
+subgraph BACKEND["Backend VM - Microservices"]
+    subgraph MS["Spring Boot Services"]
+        PATIENT[Patient Service]
+        DOCTOR[Doctor Service]
+        APPT[Appointment Service]
+        INGEST[Ingest Wearables]
+        ALERT[Health Alert Engine]
+    end
+    PATIENT_DB[(Patient DB)]
+    DOCTOR_DB[(Doctor DB)]
+    APPT_DB[(Appointments DB)]
+    INGEST_DB[(Wearables DB)]
+    ALERT_DB[(Alerts DB)]
+end
+FE --> MS
+PATIENT --> PATIENT_DB
+DOCTOR --> DOCTOR_DB
+APPT --> APPT_DB
+INGEST --> INGEST_DB
+ALERT --> ALERT_DB
+
+%% KEY VAULT
+subgraph VAULT["Key Vault"]
+    KV[Secrets: DB Pass, JWT, Kafka]
+end
+KV --> PATIENT
+KV --> DOCTOR
+KV --> APPT
+KV --> INGEST
+KV --> ALERT
+
+%% KAFKA
+subgraph KAFKA_VM["Kafka VM"]
+    KAFKA[Kafka Cluster]
+end
+INGEST -->|publish readings| KAFKA
+KAFKA -->|consume to detect issues| ALERT
+ALERT --> DOCTOR
+
+%% SPARK (Realtime)
+subgraph SPARK_RT["Spark VM - Realtime"]
+    SPARK[Apache Spark Streaming]
+end
+KAFKA -->|realtime stream| SPARK
+SPARK -->|publish alerts| KAFKA
+
+%% BIG DATA (Anir)
+subgraph SCRAPING["PySpark Scraping"]
+    SCRAPER[PySpark Jobs]
+end
+
+subgraph HDFS_BRONZE["Hadoop - Bronze Layer"]
+    HDFS[(HDFS Raw Data)]
+end
+
+subgraph SILVER["MongoDB - Silver Layer"]
+    SILVER_DB[(Cleaned Data)]
+end
+
+subgraph GOLD["Postgres - Gold Layer"]
+    GOLD_DB[(Analytical Warehouse)]
+end
+
+subgraph BI["Power BI"]
+    PBI[Dashboards]
+end
+
+%% Links: Microservices <-> Big Data
+
+%% Real-time medical readings exported to Big Data
+KAFKA -->|mirror topic| HDFS
+
+%% Alerts stored for ML training
+ALERT -->|export alerts| HDFS
+
+%% Scraper (web/API) -> Demo data -> Bronze
+SCRAPER --> HDFS
+
+%% Bronze -> Silver -> Gold
+HDFS -->|Spark ETL| SILVER_DB
+SILVER_DB -->|Spark ETL| GOLD_DB
+
+%% BI reading from Gold layer
+GOLD_DB --> PBI
+
+%% Backend reading analytics
+DOCTOR -->|analytics API| GOLD_DB
+```
+
+---
+
 # 🚀 **Main Technologies**
 
 - **Spring Boot 3+** (backend microservices)
