@@ -18,63 +18,61 @@ flowchart TB
     classDef bigdata fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
 
     %% --- TOP LEVEL: USER & GATEWAY ---
-    subgraph S_FW [Firewall / Gateway]
-        RP[Reverse Proxy / Gateway]:::component
+    subgraph S_FW [Firewall / Gateway VM<br/>Nginx Reverse Proxy]
+        RP[Nginx Reverse Proxy<br/>TLS Termination / Routing]:::component
     end
 
-    User(User Browser):::component --> RP
+    User(User Browser<br/>Chrome/Firefox):::component --> RP
 
     %% --- FRONTEND ---
-    subgraph S_FRONT [Frontend VM]
-        FE[React Frontend]:::microservice
+    subgraph S_FRONT [Frontend VM<br/>React + Vite + Tailwind]
+        FE[React Frontend<br/>JS/TS · Vite · TailwindCSS]:::microservice
     end
     RP --> FE
 
     %% --- BACKEND ---
-    subgraph S_BACK [Backend VM - Microservices]
+    subgraph S_BACK [Backend VM - Microservices<br/>Spring Boot 3 · Java 21 · Docker]
         direction TB
 
-        %% Grouping Services with their DBs logically
         subgraph G_PAT [ ]
             style G_PAT fill:none,stroke:none
-            PAT[Patient Service]:::microservice --> PAT_DB[(Patient DB)]:::db
+            PAT[Patient Service<br/>Spring Boot REST]:::microservice --> PAT_DB[(PostgreSQL<br/>Patient DB)]:::db
         end
 
         subgraph G_DOC [ ]
             style G_DOC fill:none,stroke:none
-            DOC[Doctor Service]:::microservice --> DOC_DB[(Doctor DB)]:::db
+            DOC[Doctor Service<br/>Spring Boot REST]:::microservice --> DOC_DB[(PostgreSQL<br/>Doctor DB)]:::db
         end
 
         subgraph G_APPT [ ]
             style G_APPT fill:none,stroke:none
-            APPT[Appointment Service]:::microservice --> APPT_DB[(Appt DB)]:::db
+            APPT[Appointment Service<br/>Spring Boot REST]:::microservice --> APPT_DB[(PostgreSQL<br/>Appt DB)]:::db
         end
 
         subgraph G_ING [ ]
             style G_ING fill:none,stroke:none
-            INGEST[Ingest Wearables]:::microservice --> INGEST_DB[(Wearables DB)]:::db
+            INGEST[Ingest Wearables<br/>Spring Boot + Kafka Producer]:::microservice --> INGEST_DB[(PostgreSQL<br/>Wearables DB)]:::db
         end
 
         subgraph G_ALERT [ ]
             style G_ALERT fill:none,stroke:none
-            ALERT[Health Alert Engine]:::microservice --> ALERT_DB[(Alerts DB)]:::db
+            ALERT[Health Alert Engine<br/>Spring Boot + Kafka Consumer]:::microservice --> ALERT_DB[(PostgreSQL<br/>Alerts DB)]:::db
         end
     end
 
-    %% Routing Flow
     RP --> PAT
     RP --> DOC
     RP --> APPT
     RP --> INGEST
     RP --> ALERT
 
-    %% Frontend logical communication
     FE -.-> RP
 
-    %% --- KEY VAULT (Kept clean with dotted lines) ---
-    subgraph S_SEC [Security]
-        KV[Key Vault<br/>Secrets/Certs]:::vault
+    %% --- KEY VAULT ---
+    subgraph S_SEC [Security & Secrets<br/>HashiCorp Vault OSS]
+        KV[HashiCorp Vault<br/>Secrets · JWT · DB Credentials]:::vault
     end
+
     KV -.-> PAT
     KV -.-> DOC
     KV -.-> APPT
@@ -82,55 +80,50 @@ flowchart TB
     KV -.-> ALERT
 
     %% --- REALTIME STREAMING ---
-    subgraph S_KAFKA [Kafka VM]
-        KAFKA{Kafka Cluster}:::component
+    subgraph S_KAFKA [Kafka VM<br/>Apache Kafka · Zookeeper]
+        KAFKA[KAFKA Cluster<br/>Apache Kafka]:::component
     end
 
-    subgraph S_SPARK_RT [Spark VM - Realtime]
-        SPARK_RT[Spark Streaming]:::component
+    subgraph S_SPARK_RT [Realtime Processing VM<br/>Apache Spark Streaming]
+        SPARK_RT[Spark Streaming<br/>Structured Streaming]:::component
     end
 
-    %% Streaming Loops
-    INGEST -->|1. Publish Readings| KAFKA
-    KAFKA -->|2. Stream| SPARK_RT
-    SPARK_RT -->|3. Publish Alerts| KAFKA
-    KAFKA -->|4. Consume Alerts| ALERT
-    ALERT -->|5. Notify| DOC
+    INGEST -->|1. Publish readings<br/>Kafka Producer| KAFKA
+    KAFKA -->|2. Stream data<br/>Kafka Topic| SPARK_RT
+    SPARK_RT -->|3. Alerts computed| KAFKA
+    KAFKA -->|4. Consume alerts<br/>Kafka Consumer| ALERT
+    ALERT -->|5. Notify doctor| DOC
 
     %% --- BIG DATA ANALYTICS PIPELINE ---
-    %% Grouping the whole ETL pipeline
-    subgraph S_ANALYTICS [Big Data & Analytics Pipeline]
+    subgraph S_ANALYTICS [Big Data & Analytics Pipeline<br/>Hadoop · Spark · MongoDB · Postgres · Power BI]
         direction LR
 
-        subgraph SRC [Sources]
-            SCRAPER[PySpark Scraper]:::bigdata
+        subgraph SRC [Data Sources & Scraping]
+            SCRAPER[ETL Scraper<br/>PySpark + Python]:::bigdata
         end
 
-        subgraph DATA_LAKE [Data Lake]
+        subgraph DATA_LAKE [Data Lakehouse]
             HDFS[(Hadoop HDFS<br/>Bronze Layer)]:::db
             MONGO[(MongoDB<br/>Silver Layer)]:::db
-            POSTGRES[(Postgres<br/>Gold Layer)]:::db
+            POSTGRES[(Postgres DWH<br/>Gold Layer)]:::db
         end
 
-        BI[Power BI<br/>Dashboards]:::component
+        BI[Power BI<br/>Analytics Dashboards]:::component
 
-        %% Pipeline Flow
         SCRAPER --> HDFS
-        HDFS -->|Spark ETL| MONGO
-        MONGO -->|Spark ETL| POSTGRES
+        HDFS -->|Spark ETL<br/>Clean & Transform| MONGO
+        MONGO -->|Spark ETL<br/>Model-Ready| POSTGRES
         POSTGRES --> BI
     end
 
-    %% --- CROSS-SYSTEM CONNECTIONS ---
-    %% Connecting Operational to Analytical
-    KAFKA -.->|Mirror Topic| HDFS
-    ALERT_DB -.->|Export History| HDFS
+    %% --- SYSTEM CONNECTIONS ---
+    KAFKA -.->|Mirror Topic<br/>Long-term Storage| HDFS
+    ALERT_DB -.->|Export Alerts<br/>Model Training| HDFS
 
-    %% Analytics Feedback Loop
-    DOC o--o|Analytics API| POSTGRES
+    DOC o--o|Analytics API<br/>Trends & Stats| POSTGRES
 
-    %% Apply Subgraph Styles
     class S_FW,S_FRONT,S_BACK,S_KAFKA,S_SPARK_RT,S_ANALYTICS vm
+
 ```
 
 ---
