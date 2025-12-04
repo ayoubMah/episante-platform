@@ -52,7 +52,9 @@ services:
     ports:
       - "9091:9091"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://patient-db:5432/patientdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://patient-db:5432/patientdb
+      SPRING_DATASOURCE_USERNAME: patient_user
+      SPRING_DATASOURCE_PASSWORD: patient _pass
     networks:
       - episante_net
 
@@ -84,7 +86,10 @@ services:
     ports:
       - "9092:9092"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://doctor-db:5432/doctordb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://doctor-db:5432/doctordb
+      SPRING_DATASOURCE_USERNAME: doctor_user
+      SPRING_DATASOURCE_PASSWORD: doctor_pass
+
     networks:
       - episante_net
 

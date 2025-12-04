@@ -2,47 +2,47 @@
 
 ### 0.1 — Define Functional Scope
 
-- [ ] Identify core features for MVP:
-  - [ ] Doctor management
-  - [ ] Patient management
-  - [ ] Appointment booking
-  - [ ] Wearable ingestion + alerting
-  - [ ] Analytics dashboard scope
-- [ ] Define non-functional requirements:
-  - [ ] Multi-VM deployment
-  - [ ] High availability (simulation)
-  - [ ] Secure secrets storage
-  - [ ] CI/CD pipeline
+- [x] Identify core features for MVP:
+  - [x] Doctor management
+  - [x] Patient management
+  - [x] Appointment booking
+  - [x] Wearable ingestion + alerting
+  - [x] Analytics dashboard scope
+- [x] Define non-functional requirements:
+  - [x] Multi-VM deployment
+  - [x] High availability (simulation)
+  - [x] Secure secrets storage
+  - [x] CI/CD pipeline
 
 ### 0.2 — Define Global Architecture
 
 - [ ] Create a complete architecture map:
-  - [ ] Frontend stack (React + Vite + Tailwind)
-  - [ ] Backend microservices (Spring Boot 3 + Java 21)
+  - [x] Frontend stack (React 19 + Vite 7 + Tailwind 3.4 and TS 5.9)
+  - [x] Backend microservices (Spring Boot 4 + Java 21 and javac 21)
   - [ ] Databases (PostgreSQL per service)
   - [ ] Streaming (Kafka)
   - [ ] Realtime compute (Spark Streaming)
   - [ ] Big Data pipeline (HDFS, MongoDB, Postgres DWH)
-  - [ ] Key Vault (HashiCorp Vault)
+  - [ ] Key Vault (Docker Secrets)
   - [ ] Gateway (Nginx Reverse Proxy)
   - [ ] Firewall (IPFire)
-- [ ] Confirm VM topology:
-  - [ ] Frontend VM
-  - [ ] Backend VM
-  - [ ] Data VM
+- [x] Confirm VM topology:
+  - [x] Frontend VM
+  - [x] Backend VM
+  - [x] Data VM
   - [ ] Kafka VM
-  - [ ] BigData VM
+  - [x] BigData VM
   - [ ] Gateway VM
-  - [ ] Firewall VM (already exists)
+  - [x] Firewall VM (already exists)
 
 ### 0.3 — Define Network & IP Plan
 
-- [ ] Set static IPs for each VM:
-  - [ ] frontend-vm → 172.20.0.xx
-  - [ ] backend-vm → 172.20.0.xx
-  - [ ] data-vm → 172.20.0.xx
+- [x] Set static IPs for each VM:
+  - [x] frontend-vm → 172.20.0.xx
+  - [x] backend-vm → 172.20.0.xx
+  - [x] data-vm → 172.20.0.xx
   - [ ] kafka-vm → 172.20.0.xx
-  - [ ] bigdata-vm → 172.20.0.xx
+  - [x] bigdata-vm → 172.20.0.xx
   - [ ] gateway-vm → 172.20.0.xx
 - [ ] Define subnets:
   - [ ] GREEN network
@@ -81,46 +81,34 @@
 
 ### 0.5 — Choose Technologies & Versions
 
-- [ ] Backend stack:
-  - [ ] Java 21
-  - [ ] Spring Boot 3.2+
-  - [ ] Flyway
-  - [ ] Postgres 16
+- [x] Backend stack:
+  - [x] Java 21
+  - [x] Spring Boot 4
+  - [x] Flyway
+  - [x] Postgres 16
   - [ ] WebFlux or MVC (choose)
-- [ ] Frontend stack:
-  - [ ] React 18
-  - [ ] Vite
-  - [ ] Tailwind CSS
-  - [ ] TypeScript
+- [x] Frontend stack:
+  - [x] React 19
+  - [x] Vite
+  - [x] Tailwind CSS
+  - [x] TypeScript
 - [ ] Streaming:
-  - [ ] Kafka latest
-  - [ ] Kafka UI (optional)
+  - [x] Kafka latest
 - [ ] Big Data:
   - [ ] Spark 3.5
   - [ ] Hadoop HDFS
   - [ ] MongoDB 6
   - [ ] Postgres DWH
 - [ ] DevOps:
-  - [ ] Docker & Docker Compose
-  - [ ] Jenkins
-  - [ ] HashiCorp Vault OSS
-  - [ ] Nginx reverse proxy
+  - [x] Docker & Docker Compose
+  - [x] Jenkins
+  - [x] Docker Secrets for key vault
+  - [x] Nginx reverse proxy
 
-### 0.6 — Prepare VM Deployment Strategy
 
-- [ ] VM creation strategy (academic infra):
-  - [ ] Decide CPU/RAM per VM
-  - [ ] Enable SSH access
-  - [ ] Prepare scripts for installation
-- [ ] OS setup:
-  - [ ] Install Ubuntu 22.04 on each VM
-  - [ ] Install Docker & Docker Compose
-  - [ ] Install Java 21 on backend VM
-  - [ ] Install Nginx on gateway VM
+### 0.6 — Draw All Diagrams
 
-### 0.7 — Draw All Diagrams
-
-- [ ] Architecture Diagram
+- [x] Architecture Diagram
 - [ ] VM Topology
 - [ ] Network Flow
 - [ ] Data Pipeline
@@ -128,7 +116,7 @@
 - [ ] Export diagrams as PNG/SVG
 - [ ] Add to docs folder
 
-### 0.8 — Define Standards
+### 0.7 — Define Standards
 
 - [ ] API naming conventions
 - [ ] Branching strategy
@@ -137,7 +125,7 @@
 - [ ] Log formats
 - [ ] Secrets policy
 
-### 0.9 — Pre-Phase Validation
+### 0.8 — Pre-Phase Validation
 
 - [ ] All diagrams validated
 - [ ] All repos created

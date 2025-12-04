@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { appointmentApi, doctorApi, patientApi, Appointment } from "../../lib/api";
+import { appointmentApi, doctorApi, patientApi } from "../../lib/api";
+import type { Appointment, Doctor, Patient } from "../../lib/api";
+
 
 export default function AppointmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [doctors, setDoctors] = useState([]);
-  const [patients, setPatients] = useState([]);
+const [doctors, setDoctors] = useState<Doctor[]>([]);
+const [patients, setPatients] = useState<Patient[]>([]);
+
 
   const [form, setForm] = useState<Appointment>({
     doctorId: "",
@@ -58,7 +61,7 @@ export default function AppointmentForm() {
             required
           >
             <option value="">Select Doctor</option>
-            {doctors.map((d: any) => (
+            {doctors.map((d: Doctor) => (
               <option key={d.id} value={d.id}>
                 {d.firstName} {d.lastName} ({d.specialty})
               </option>
@@ -76,7 +79,7 @@ export default function AppointmentForm() {
             required
           >
             <option value="">Select Patient</option>
-            {patients.map((p: any) => (
+            {patients.map((p: Patient) => (
               <option key={p.id} value={p.id}>
                 {p.firstName} {p.lastName}
               </option>
