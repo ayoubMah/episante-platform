@@ -43,7 +43,5 @@ public class Patient {
     @Column(nullable = false)
     private OffsetDateTime updatedAt;
 
-    public enum Gender {
-        MALE, FEMALE
-    }
+
 }

@@ -1,5 +1,6 @@
-package episante.aai.appointmentservice;
+package com.upec.episantecommon.dto;
 
+import com.upec.episantecommon.enums.AppointmentStatus;
 import lombok.Data;
 
 import java.time.OffsetDateTime;

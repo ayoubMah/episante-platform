@@ -1,4 +1,4 @@
-package episante.aai.appointmentservice;
+package com.upec.episantecommon.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

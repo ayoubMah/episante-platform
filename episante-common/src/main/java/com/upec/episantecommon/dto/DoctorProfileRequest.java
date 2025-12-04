@@ -1,14 +1,15 @@
-package episante.aai.patientservice;
+package com.upec.episantecommon.dto;
 
 import java.util.UUID;
 
-public class PatientProfileRequest {
+public class DoctorProfileRequest {
     private UUID id;
     private String firstName;
     private String lastName;
     private String email;
-    private String dob;
-    private String phone;
+    private String specialty;
+    private String rppsNumber;
+    private String address;
 
     // getters + setters
 
@@ -44,20 +45,27 @@ public class PatientProfileRequest {
         this.email = email;
     }
 
-    public String getDob() {
-        return dob;
+    public String getSpecialty() {
+        return specialty;
     }
 
-    public void setDob(String dob) {
-        this.dob = dob;
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getRppsNumber() {
+        return rppsNumber;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setRppsNumber(String rppsNumber) {
+        this.rppsNumber = rppsNumber;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }
-

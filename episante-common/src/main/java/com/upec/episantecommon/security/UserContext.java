@@ -1,4 +1,4 @@
-package episante.aai.appointmentservice;
+package com.upec.episantecommon.security;
 
 import java.util.UUID;
 
