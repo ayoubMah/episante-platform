@@ -1,5 +1,3 @@
--- Drop table if exists to be safe during dev
-DROP TABLE IF EXISTS patients;
 
 CREATE TABLE patients (
     id UUID PRIMARY KEY,

@@ -1,0 +1,75 @@
+services:
+
+  patient-service:
+    build:
+      context: ../
+      dockerfile: patient-service/Dockerfile
+    container_name: patient-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://data-vm-ip:5432/patientdb
+      SPRING_DATASOURCE_USERNAME: patient_user
+      SPRING_DATASOURCE_PASSWORD: patient_pass
+    ports:
+      - "9091:9091"
+    networks:
+      - episante_net
+
+  doctor-service:
+    build:
+      context: ../
+      dockerfile: doctor-service/Dockerfile
+    container_name: doctor-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://data-vm-ip:5432/doctordb
+      SPRING_DATASOURCE_USERNAME: doctor_user
+      SPRING_DATASOURCE_PASSWORD: doctor_pass
+    ports:
+      - "9092:9092"
+    networks:
+      - episante_net
+
+  appointment-service:
+    build:
+      context: ../
+      dockerfile: appointment-service/Dockerfile
+    container_name: appointment-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://data-vm-ip:5432/appointmentdb
+      SPRING_DATASOURCE_USERNAME: appointment_user
+      SPRING_DATASOURCE_PASSWORD: appointment_pass
+      SPRING_APPLICATION_JSON: |
+        {
+          "application": {
+            "config": {
+              "doctor-url": "http://doctor-service:9092",
+              "patient-url": "http://patient-service:9091"
+            }
+          }
+        }
+    ports:
+      - "9093:9093"
+    networks:
+      - episante_net
+
+  auth-service:
+    build:
+      context: ../
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://data-vm-ip:5432/authdb
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: auth_pass
+
+      APPLICATION_CONFIG_PATIENT-URL: http://patient-service:9091
+      APPLICATION_CONFIG_DOCTOR-URL: http://doctor-service:9092
+
+      APPLICATION_SECURITY_JWT-SECRET: "V5P0gvAl/J4VzUiijelQv79BLiLtm1KIrDqx9aQF2Mw="
+    ports:
+      - "9094:9094"
+    networks:
+      - episante_net
+
+networks:
+  episante_net:
+    driver: bridge
