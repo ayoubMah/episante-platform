@@ -2,39 +2,39 @@
 
 ##  Phase 0 — Architecture & Foundations
 
-- [ ] Microservices list & responsibilities
-- [ ] VM topology
-- [ ] Network diagram (gateway, backend, data, Kafka, big data)
-- [ ] Chosen technologies documented:
-  - [ ] Spring Boot, Java 21
-  - [ ] PostgreSQL
-  - [ ] React + Vite + Tailwind
+- [x] Microservices list & responsibilities
+- [x] VM topology
+- [x] Network diagram (gateway, backend, data, Kafka, big data)
+- [x] Chosen technologies documented:
+  - [x] Spring Boot, Java 21
+  - [x] PostgreSQL
+  - [x] React + Vite + Tailwind
   - [ ] Kafka, Spark Streaming
   - [ ] Hadoop, MongoDB, Postgres DW
   - [ ] HashiCorp Vault
   - [ ] Jenkins CI/CD
-- [ ] Docker + Docker Compose structure for each service
+- [x] Docker + Docker Compose structure for each service
 
 ---
 
 ##  Phase 1 — Core CRUD (Local Development)
 
-- [ ] Doctor Service CRUD
-- [ ] Patient Service CRUD
-- [ ] Appointment Service CRUD
+- [x] Doctor Service CRUD
+- [x] Patient Service CRUD
+- [x] Appointment Service CRUD
 - [ ] Shared API gateway routes (local Nginx reverse proxy)
-- [ ] Local PostgreSQL databases for each service
-- [ ] Flyway migrations (V1 schema, V2 seed data)
-- [ ] Local frontend consuming backend APIs
+- [x] Local PostgreSQL databases for each service
+- [x] Flyway migrations (V1 schema, V2 seed data)
+- [x] Local frontend consuming backend APIs
 - [ ] Basic authentication (optional)
 
 ---
 
 ##  Phase 2 — Local Infrastructure Simulation
 
-- [ ] Local Nginx reverse proxy
-- [ ] Local microservices network (docker-compose networks)
-- [ ] Local multi-DB setup (patientdb, doctordb, appointmentdb)
+- [x] Local Nginx reverse proxy
+- [x] Local microservices network (docker-compose networks)
+- [x] Local multi-DB setup (patientdb, doctordb, appointmentdb)
 - [ ] Local Key Vault setup (HashiCorp Vault dev mode)
 - [ ] Local Kafka cluster (single-node)
 - [ ] Local Spark Streaming (reading dummy data)
