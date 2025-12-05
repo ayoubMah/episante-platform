@@ -1,13 +1,17 @@
 package episante.aai.patientservice;
 
+import com.upec.episantecommon.dto.PatientProfileRequest;
+import com.upec.episantecommon.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class PatientService {
+
     private final PatientRepository repo;
 
     public PatientService(PatientRepository repo) {
@@ -26,30 +30,41 @@ public class PatientService {
         if (req.getDob() != null) {
             p.setDob(LocalDate.parse(req.getDob()));
         }
-        // Gender can stay null (if NOT required in DB)
-        repo.save(p);  // createdAt and updatedAt auto-filled
+
+        repo.save(p);
     }
 
-
-    public List<Patient> findAll() { return repo.findAll(); }
+    public List<Patient> findAll() {
+        return repo.findAll();
+    }
 
     public Patient findById(UUID id) {
-        return repo.findById(id).orElseThrow(() -> new RuntimeException("Patient not found"));
+        return repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Patient not found"));
     }
 
-    public Patient create(Patient p) { return repo.save(p); }
+    public Patient create(Patient p) {
+        p.setCreatedAt(OffsetDateTime.now());
+        return repo.save(p);
+    }
 
     public Patient update(UUID id, Patient updated) {
         Patient existing = findById(id);
+
         existing.setFirstName(updated.getFirstName());
         existing.setLastName(updated.getLastName());
         existing.setEmail(updated.getEmail());
         existing.setPhone(updated.getPhone());
         existing.setDob(updated.getDob());
         existing.setGender(updated.getGender());
-        existing.setUpdatedAt(updated.getUpdatedAt());
+
+        existing.setUpdatedAt(OffsetDateTime.now());
+
         return repo.save(existing);
     }
 
-    public void delete(UUID id) { repo.deleteById(id); }
+    public void delete(UUID id) {
+        repo.deleteById(id);
+    }
 }
+

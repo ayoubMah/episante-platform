@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.upec.episantecommon.enums.Gender;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
