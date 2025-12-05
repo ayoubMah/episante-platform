@@ -1,10 +1,7 @@
 package com.upec.episantecommon.security;
 
-import org.springframework.stereotype.Component;
-
 import java.util.UUID;
 
-@Component
 public class SecurityRules {
 
     // Check if the current user owns this appointment as patient
