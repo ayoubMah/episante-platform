@@ -6,7 +6,7 @@
       ports:
         - "8089:80"  # The ONLY port exposed to your machine!
       volumes:
-        - ../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+        - ../../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
       depends_on:
         - frontend
         - doctor-service
@@ -17,7 +17,7 @@
 
     # --- Frontend ---
     frontend:
-      build: ../frontend
+      build: ../../frontend
       # We DO NOT expose ports here (no "3000:80").
       # Only the Gateway talks to the frontend container.
       networks:
@@ -43,7 +43,7 @@
 
     patient-service:
       build:
-        context: ../     # root of the whole project
+        context: ../../     # root of the whole project
         dockerfile: patient-service/Dockerfile
       container_name: patient-service
       depends_on:
@@ -77,7 +77,7 @@
 
     doctor-service:
       build:
-        context: ../
+        context: ../../
         dockerfile: doctor-service/Dockerfile
       container_name: doctor-service
       depends_on:
@@ -112,7 +112,7 @@
 
     appointment-service:
       build:
-        context: ../
+        context: ../../
         dockerfile: appointment-service/Dockerfile
       container_name: appointment-service
       depends_on:
@@ -155,7 +155,7 @@
 
     auth-service:
       build:
-        context: ../          # root of the whole monorepo
+        context: ../../          # root of the whole monorepo
         dockerfile: auth-service/Dockerfile
       container_name: auth-service
       depends_on:
