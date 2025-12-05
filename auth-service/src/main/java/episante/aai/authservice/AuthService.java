@@ -1,5 +1,7 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.dto.DoctorProfileRequest;
+import com.upec.episantecommon.dto.PatientProfileRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,57 +29,54 @@ public class AuthService {
     @Transactional
     public UUID register(RegisterRequest request) {
 
-        // 1. Generate ID for both auth + profile services
         UUID userId = UUID.randomUUID();
 
-        // 2. Save in Auth DB
+        // --- Save user in Auth DB ---
         User user = new User();
         user.setId(userId);
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
 
-        userRepository.save(user); // ✔ persisted
+        userRepository.save(user);
 
         try {
-            // 3. Create the profile in the correct service
             switch (request.getRole()) {
 
                 case PATIENT -> {
-                    patientClient.createPatientProfile(
-                            new PatientProfileRequest(
-                                    userId,
-                                    request.getFirstName(),
-                                    request.getLastName(),
-                                    request.getEmail(),
-                                    request.getDob(),
-                                    request.getPhone()
-                            )
-                    );
+                    // Build DTO manually (NO ARGS constructor required)
+                    PatientProfileRequest dto = new PatientProfileRequest();
+                    dto.setId(userId);
+                    dto.setFirstName(request.getFirstName());
+                    dto.setLastName(request.getLastName());
+                    dto.setEmail(request.getEmail());
+                    dto.setDob(request.getDob());
+                    dto.setPhone(request.getPhone());
+
+                    patientClient.createPatientProfile(dto);
                 }
 
                 case DOCTOR -> {
-                    doctorClient.createDoctorProfile(
-                            new DoctorProfileRequest(
-                                    userId,
-                                    request.getFirstName(),
-                                    request.getLastName(),
-                                    request.getEmail(),
-                                    request.getSpecialty(),
-                                    request.getRppsNumber(),
-                                    request.getAddress()
-                            )
-                    );
+                    DoctorProfileRequest dto = new DoctorProfileRequest();
+                    dto.setId(userId);
+                    dto.setFirstName(request.getFirstName());
+                    dto.setLastName(request.getLastName());
+                    dto.setEmail(request.getEmail());
+                    dto.setSpecialty(request.getSpecialty());
+                    dto.setRppsNumber(request.getRppsNumber());
+                    dto.setAddress(request.getAddress());
+
+                    doctorClient.createDoctorProfile(dto);
                 }
 
                 case ADMIN -> {
-                    // No profile needed → just return
+                    // No profile creation required
                 }
             }
 
         } catch (Exception ex) {
 
-            // 4. COMPENSATING ACTION (SAGA)
+            // SAGA rollback
             userRepository.deleteById(userId);
 
             throw new RuntimeException("Registration failed: " + ex.getMessage());

@@ -1,5 +1,7 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.enums.Role;
+
 public class RegisterRequest {
 
     // Common fields

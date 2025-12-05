@@ -1,0 +1,59 @@
+services:
+
+  patient-db:
+    image: postgres:16
+    container_name: patient-db
+    environment:
+      POSTGRES_DB: patientdb
+      POSTGRES_USER: patient_user
+      POSTGRES_PASSWORD: patient_pass
+    volumes:
+      - patient_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+  doctor-db:
+    image: postgres:16
+    container_name: doctor-db
+    environment:
+      POSTGRES_DB: doctordb
+      POSTGRES_USER: doctor_user
+      POSTGRES_PASSWORD: doctor_pass
+    volumes:
+      - doctor_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+  appointment-db:
+    image: postgres:16
+    container_name: appointment-db
+    environment:
+      POSTGRES_DB: appointmentdb
+      POSTGRES_USER: appointment_user
+      POSTGRES_PASSWORD: appointment_pass
+    volumes:
+      - appointment_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+  auth-db:
+    image: postgres:16
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    networks:
+      - episante_net
+
+volumes:
+  patient_data:
+  doctor_data:
+  appointment_data:
+  auth_data:
+
+networks:
+  episante_net:
+    driver: bridge

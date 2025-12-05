@@ -1,5 +1,6 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.enums.Role;
 import jakarta.persistence.*;
 import java.util.UUID;
 

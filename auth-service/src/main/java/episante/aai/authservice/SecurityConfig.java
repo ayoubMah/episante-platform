@@ -1,17 +1,28 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.security.BaseSecurityConfig;
+import com.upec.episantecommon.security.JwtAuthenticationFilter;
+import com.upec.episantecommon.security.JwtService;
+import com.upec.episantecommon.security.SecurityRules;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfig {
+@EnableWebSecurity
+public class SecurityConfig extends BaseSecurityConfig {
+
+    @Override
+    protected String[] publicEndpoints() {
+        return new String[]{
+                "/api/auth/**",   // Auth always open
+                "/actuator/**",
+                "/internal/**"
+        };
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -19,20 +30,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public JwtService jwtService(@Value("${application.security.jwt-secret}") String secret) {
+        return new JwtService(secret);
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless APIs
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Open login/register
-                        .anyRequest().authenticated() // Protect everything else
-                );
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService) {
+        return new JwtAuthenticationFilter(jwtService);
+    }
 
-        return http.build();
+    @Bean
+    public SecurityRules securityRules() {
+        return new SecurityRules();
     }
 }

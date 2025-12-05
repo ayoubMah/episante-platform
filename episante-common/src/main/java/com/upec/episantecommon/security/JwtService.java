@@ -5,6 +5,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 import java.security.Key;
+import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 public class JwtService {
@@ -35,6 +37,18 @@ public class JwtService {
             return false;
         }
     }
+
+    public String generateToken(UUID userId, String role) {
+        return Jwts.builder()
+                .setSubject(userId.toString())          // standard claim: “sub”
+                .claim("id", userId.toString())         // custom claim
+                .claim("role", role)                    // custom claim
+                .setIssuedAt(new Date())                 // now
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 24h
+                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
 
     private Claims parse(String token) {
         return Jwts.parserBuilder()

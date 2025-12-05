@@ -1,5 +1,6 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.dto.PatientProfileRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 

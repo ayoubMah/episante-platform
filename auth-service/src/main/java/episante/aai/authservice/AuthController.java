@@ -1,9 +1,12 @@
 package episante.aai.authservice;
 
+import com.upec.episantecommon.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,7 +27,6 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
 
-        // 1. Let Spring validate credentials
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -32,14 +34,10 @@ public class AuthController {
                 )
         );
 
-        // 2. Fetch the actual user from DB (we need ID + ROLE)
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Generate JWT with claims (id + role)
-        String token = jwtService.generateToken(user);
-
-        // 4. Return token
+        String token = jwtService.generateToken(user.getId(), user.getRole().name());
         return new AuthResponse(token);
     }
 }
