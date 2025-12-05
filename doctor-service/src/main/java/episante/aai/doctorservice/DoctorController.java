@@ -41,7 +41,7 @@ public class DoctorController {
      * Create doctor (internal from auth-service or admin)
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SYSTEM')")
+    @PreAuthorize("hasRole('ADMIN')")
     public DoctorResponseDTO create(@RequestBody Doctor d) {
         return toDTO(service.create(d));
     }

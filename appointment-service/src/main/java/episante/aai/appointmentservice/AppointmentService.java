@@ -1,14 +1,21 @@
 package episante.aai.appointmentservice;
 
+import com.upec.episantecommon.dto.*;
+import com.upec.episantecommon.enums.AppointmentStatus;
+import com.upec.episantecommon.exception.BadRequestException;
+import com.upec.episantecommon.exception.NotFoundException;
+import com.upec.episantecommon.security.SecurityUtils;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Service
+@Service("appointmentService")
 @RequiredArgsConstructor
 public class AppointmentService {
 
@@ -16,209 +23,207 @@ public class AppointmentService {
     private final PatientClient patientClient;
     private final DoctorClient doctorClient;
 
-    public List<AppointmentResponseDTO> getAll() {
-        return repository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    // ---------------------------
+    // GET ALL (smart filtering)
+    // ---------------------------
+    public List<AppointmentResponseDTO> getAllForCurrentUser() {
+
+        UUID userId = SecurityUtils.getCurrentUserId();
+
+        if (SecurityUtils.isAdmin()) {
+            return repository.findAll().stream().map(this::toResponse).toList();
+        }
+
+        if (SecurityUtils.isDoctor()) {
+            return repository.findByDoctorId(userId).stream().map(this::toResponse).toList();
+        }
+
+        if (SecurityUtils.isPatient()) {
+            return repository.findByPatientId(userId).stream().map(this::toResponse).toList();
+        }
+
+        throw new AccessDeniedException("Unauthorized");
     }
 
-
+    // ---------------------------
+    // CREATE
+    // ---------------------------
     public AppointmentResponseDTO create(CreateAppointmentRequestDTO request) {
 
-        // 1. Validate Patient
-        try {
-            patientClient.getPatientById(request.getPatientId());
-        } catch (FeignException.NotFound e) {
-            throw new IllegalArgumentException("Patient not found with ID: " + request.getPatientId());
-        } catch (FeignException e) {
-            throw new RuntimeException("Patient Service is down or unreachable");
-        }
+        validateAppointmentRequest(request);
 
-        // 2. Validate Doctor
-        try {
-            doctorClient.getDoctorById(request.getDoctorId());
-        } catch (FeignException.NotFound e) {
-            throw new IllegalArgumentException("Doctor not found with ID: " + request.getDoctorId());
-        } catch (FeignException e) {
-            throw new RuntimeException("Doctor Service is down or unreachable");
-        }
+        validatePatient(request.getPatientId());
+        validateDoctor(request.getDoctorId());
 
-        // 3. Check if doctor already booked for this time slot
+        // Prevent double booking
         if (repository.existsOverlappingAppointment(
-                request.getDoctorId(),
-                request.getStartTime(),
-                request.getEndTime()
+                request.getDoctorId(), request.getStartTime(), request.getEndTime()
         )) {
-            throw new IllegalStateException("Doctor is already booked for this time slot.");
+            throw new BadRequestException("Doctor is already booked for this time slot.");
         }
 
-        // 4. Create appointment
-        Appointment appointment = new Appointment();
-        appointment.setDoctorId(request.getDoctorId());
-        appointment.setPatientId(request.getPatientId());
-        appointment.setStartTime(request.getStartTime());
-        appointment.setEndTime(request.getEndTime());
-        appointment.setStatus(AppointmentStatus.PLANNED);
+        Appointment a = new Appointment();
+        a.setDoctorId(request.getDoctorId());
+        a.setPatientId(request.getPatientId());
+        a.setStartTime(request.getStartTime());
+        a.setEndTime(request.getEndTime());
+        a.setStatus(AppointmentStatus.PLANNED);
 
-        // Handle timestamps
-        appointment.setCreatedAt(OffsetDateTime.now());
-        appointment.setUpdatedAt(OffsetDateTime.now());
+        a.setCreatedAt(OffsetDateTime.now());
+        a.setUpdatedAt(OffsetDateTime.now());
 
-        // 5. Save
-        Appointment saved = repository.save(appointment);
-
-        // 6. Return response
+        Appointment saved = repository.save(a);
         return toResponse(saved);
     }
 
+    // ---------------------------
+    // GET BY ID
+    // ---------------------------
     public AppointmentResponseDTO getById(UUID id) {
-        Appointment appointment = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-        return toResponse(appointment);
+        Appointment a = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Appointment not found"));
+        return toResponse(a);
     }
 
-    private AppointmentResponseDTO toResponse(Appointment a) {
-        AppointmentResponseDTO resp = new AppointmentResponseDTO();
-        resp.setId(a.getId());
-        resp.setDoctorId(a.getDoctorId());
-        resp.setPatientId(a.getPatientId());
-        resp.setStartTime(a.getStartTime());
-        resp.setEndTime(a.getEndTime());
-        resp.setStatus(a.getStatus());
-        return resp;
-    }
-
+    // ---------------------------
+    // DETAILS (with doctor + patient info)
+    // ---------------------------
     public AppointmentDetailsDTO getAppointmentDetails(UUID id) {
-        // 1. Read appointment from local DB
-        Appointment appointment = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
+
+        Appointment a = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Appointment not found"));
 
         AppointmentDetailsDTO dto = new AppointmentDetailsDTO();
-        dto.setId(appointment.getId());
-        dto.setStartTime(appointment.getStartTime());
-        dto.setEndTime(appointment.getEndTime());
-        dto.setStatus(appointment.getStatus());
+        dto.setId(a.getId());
+        dto.setStartTime(a.getStartTime());
+        dto.setEndTime(a.getEndTime());
+        dto.setStatus(a.getStatus());
+        dto.setDoctorId(a.getDoctorId());
+        dto.setPatientId(a.getPatientId());
 
-        dto.setDoctorId(appointment.getDoctorId());
-        dto.setPatientId(appointment.getPatientId());
-
-        // 2. Fetch Patient info
+        // Patient
         try {
-            PatientResponseDTO patient = patientClient.getPatientById(appointment.getPatientId());
+            PatientResponseDTO patient = patientClient.getPatientById(a.getPatientId());
             dto.setPatientFullName(patient.getFirstName() + " " + patient.getLastName());
         } catch (FeignException.NotFound e) {
-            throw new IllegalArgumentException("Patient not found with ID: " + appointment.getPatientId());
-        } catch (FeignException e) {
-            throw new RuntimeException("Patient Service unavailable");
+            throw new NotFoundException("Patient not found: " + a.getPatientId());
         }
 
-        // 3. Fetch Doctor info with Graceful Degradation
+        // Doctor (graceful)
         try {
-            DoctorResponseDTO doctor = doctorClient.getDoctorById(appointment.getDoctorId());
-            dto.setDoctorFullName(doctor.getFirstName() + " " + doctor.getLastName());
-            dto.setDoctorSpecialty(doctor.getSpecialty());
-        } catch (FeignException.NotFound e) {
-            // ID invalid → this is a data integrity error
-            dto.setDoctorFullName("Unknown");
-            dto.setDoctorSpecialty(null);
-        } catch (FeignException e) {
-            // Entire Doctor service is DOWN → degrade gracefully
+            DoctorResponseDTO doc = doctorClient.getDoctorById(a.getDoctorId());
+            dto.setDoctorFullName(doc.getFirstName() + " " + doc.getLastName());
+            dto.setDoctorSpecialty(doc.getSpecialty());
+        } catch (Exception e) {
             dto.setDoctorFullName("Unknown");
             dto.setDoctorSpecialty("Unavailable");
         }
 
         return dto;
     }
-    // ------------------------------------------------------
-    // UPDATE APPOINTMENT
-    // ------------------------------------------------------
+
+    // ---------------------------
+    // UPDATE
+    // ---------------------------
     public AppointmentResponseDTO update(UUID id, CreateAppointmentRequestDTO request) {
 
-        // 1. Load existing appointment
         Appointment existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new NotFoundException("Appointment not found"));
 
-        // 2. Validate: cannot modify past appointments
         if (existing.getStartTime().isBefore(OffsetDateTime.now())) {
-            throw new IllegalStateException("Cannot update past appointments.");
+            throw new BadRequestException("Cannot update past appointments.");
         }
 
-        // 3. Validate doctor remains the same OR if changed, validate again
+        validateAppointmentRequest(request);
+
         if (!existing.getDoctorId().equals(request.getDoctorId())) {
-            // Validate new doctor
-            try {
-                doctorClient.getDoctorById(request.getDoctorId());
-            } catch (FeignException.NotFound e) {
-                throw new IllegalArgumentException("Doctor not found: " + request.getDoctorId());
-            }
+            validateDoctor(request.getDoctorId());
         }
 
-        // 4. Validate patient remains the same OR if changed, validate again
         if (!existing.getPatientId().equals(request.getPatientId())) {
-            try {
-                patientClient.getPatientById(request.getPatientId());
-            } catch (FeignException.NotFound e) {
-                throw new IllegalArgumentException("Patient not found: " + request.getPatientId());
-            }
+            validatePatient(request.getPatientId());
         }
 
-        // 5. Prevent overlapping bookings for the doctor
-        boolean overlapping = repository.existsOverlappingAppointment(
+        boolean overlap = repository.existsOverlappingAppointment(
                 request.getDoctorId(),
                 request.getStartTime(),
                 request.getEndTime(),
-                id // ignore this appointment itself
+                id
         );
 
-        if (overlapping) {
-            throw new IllegalStateException("Doctor is already booked for this time range.");
+        if (overlap) {
+            throw new BadRequestException("Doctor is booked during this time.");
         }
 
-        // 6. Update fields
         existing.setDoctorId(request.getDoctorId());
         existing.setPatientId(request.getPatientId());
         existing.setStartTime(request.getStartTime());
         existing.setEndTime(request.getEndTime());
         existing.setUpdatedAt(OffsetDateTime.now());
 
-        // 7. Save
         Appointment saved = repository.save(existing);
-
-        // 8. Convert to DTO
         return toResponse(saved);
     }
 
-
-    // ------------------------------------------------------
-    // DELETE APPOINTMENT
-    // ------------------------------------------------------
+    // ---------------------------
+    // DELETE
+    // ---------------------------
     public void delete(UUID id) {
-
         Appointment existing = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new NotFoundException("Appointment not found"));
 
-        // Business rule:
-        // Allow deleting only upcoming or planned appointments
         if (existing.getStartTime().isBefore(OffsetDateTime.now())) {
-            throw new IllegalStateException("Cannot delete past appointments.");
+            throw new BadRequestException("Cannot delete past appointments.");
         }
 
         repository.delete(existing);
     }
 
-    // Helper method to extract patientId (used for @PreAuthorize)
-    public UUID getPatientId(UUID appointmentId) {
-        return repository.findById(appointmentId)
+    // ---------------------------
+    // VALIDATION & HELPERS
+    // ---------------------------
+    private void validateAppointmentRequest(CreateAppointmentRequestDTO req) {
+        if (req.getStartTime().isAfter(req.getEndTime())) {
+            throw new BadRequestException("Start time must be before end time.");
+        }
+    }
+
+    private void validatePatient(UUID id) {
+        try {
+            patientClient.getPatientById(id);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Patient not found: " + id);
+        }
+    }
+
+    private void validateDoctor(UUID id) {
+        try {
+            doctorClient.getDoctorById(id);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Doctor not found: " + id);
+        }
+    }
+
+    public UUID getPatientId(UUID appId) {
+        return repository.findById(appId)
                 .map(Appointment::getPatientId)
                 .orElse(null);
     }
 
-    // Helper method to extract doctorId (used for @PreAuthorize)
-    public UUID getDoctorId(UUID appointmentId) {
-        return repository.findById(appointmentId)
+    public UUID getDoctorId(UUID appId) {
+        return repository.findById(appId)
                 .map(Appointment::getDoctorId)
                 .orElse(null);
     }
 
+    private AppointmentResponseDTO toResponse(Appointment a) {
+        AppointmentResponseDTO dto = new AppointmentResponseDTO();
+        dto.setId(a.getId());
+        dto.setDoctorId(a.getDoctorId());
+        dto.setPatientId(a.getPatientId());
+        dto.setStartTime(a.getStartTime());
+        dto.setEndTime(a.getEndTime());
+        dto.setStatus(a.getStatus());
+        return dto;
+    }
 }

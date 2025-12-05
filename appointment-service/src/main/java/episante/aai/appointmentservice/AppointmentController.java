@@ -1,5 +1,9 @@
 package episante.aai.appointmentservice;
 
+import com.upec.episantecommon.dto.AppointmentDetailsDTO;
+import com.upec.episantecommon.dto.AppointmentResponseDTO;
+import com.upec.episantecommon.dto.CreateAppointmentRequestDTO;
+import com.upec.episantecommon.security.SecurityRules;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +22,7 @@ public class AppointmentController {
 
     /**
      * Create a new appointment
-     * Only PATIENT or ADMIN can create appointments.
+     * Only PATIENT or ADMIN can create.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -28,8 +32,7 @@ public class AppointmentController {
     }
 
     /**
-     * Get appointment by ID (raw)
-     * Only owner (patient), assigned doctor, or admin can view.
+     * Get appointment by ID
      */
     @GetMapping("/{id}")
     @PreAuthorize("@securityRules.canView(@appointmentService.getPatientId(#id), @appointmentService.getDoctorId(#id))")
@@ -38,7 +41,7 @@ public class AppointmentController {
     }
 
     /**
-     * Get appointment details (doctor + patient info)
+     * Get appointment details (doctor + patient)
      */
     @GetMapping("/{id}/details")
     @PreAuthorize("@securityRules.canView(@appointmentService.getPatientId(#id), @appointmentService.getDoctorId(#id))")
@@ -47,15 +50,12 @@ public class AppointmentController {
     }
 
     /**
-     * Get all appointments
-     * - ADMIN => ALL
-     * - DOCTOR => only assigned
-     * - PATIENT => only theirs
+     * Smart filtering by ROLE
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('PATIENT')")
     public List<AppointmentResponseDTO> getAll() {
-        return service.getAll();
+        return service.getAllForCurrentUser();
     }
 
     /**

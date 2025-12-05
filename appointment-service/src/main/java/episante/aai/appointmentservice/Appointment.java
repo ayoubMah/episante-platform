@@ -1,5 +1,6 @@
 package episante.aai.appointmentservice;
 
+import com.upec.episantecommon.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.Hibernate;
