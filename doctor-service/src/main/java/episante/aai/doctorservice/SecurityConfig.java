@@ -1,35 +1,39 @@
 package episante.aai.doctorservice;
 
+import com.upec.episantecommon.security.BaseSecurityConfig;
+import com.upec.episantecommon.security.JwtAuthenticationFilter;
+import com.upec.episantecommon.security.JwtService;
+import com.upec.episantecommon.security.SecurityRules;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 @Configuration
-public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
-        this.jwtFilter = jwtFilter;
+@EnableWebSecurity
+public class SecurityConfig extends BaseSecurityConfig {
+    @Override
+    protected String[] publicEndpoints() {
+        return new String[]{
+                "/api/doctors",          // list doctors is public
+                "/api/doctors/*",        // doctor info is public
+                "/internal/**",
+                "/actuator/health"
+        };
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/internal/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    public JwtService jwtService(@Value("${application.security.jwt-secret}") String secret) {
+        return new JwtService(secret);
+    }
 
-        return http.build();
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService) {
+        return new JwtAuthenticationFilter(jwtService);
+    }
+
+    @Bean
+    public SecurityRules securityRules() {
+        return new SecurityRules();
     }
 }
-
-

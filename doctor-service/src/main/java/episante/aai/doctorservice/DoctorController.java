@@ -1,5 +1,7 @@
 package episante.aai.doctorservice;
 
+import com.upec.episantecommon.dto.DoctorResponseDTO;
+import com.upec.episantecommon.security.SecurityRules;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -21,16 +23,18 @@ public class DoctorController {
      * Public: list all doctors
      */
     @GetMapping
-    public List<Doctor> all() {
-        return service.findAll();
+    public List<DoctorResponseDTO> all() {
+        return service.findAll().stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     /**
      * Public: get doctor details by ID
      */
     @GetMapping("/{id}")
-    public Doctor one(@PathVariable UUID id) {
-        return service.findById(id);
+    public DoctorResponseDTO one(@PathVariable UUID id) {
+        return toDTO(service.findById(id));
     }
 
     /**
@@ -38,8 +42,8 @@ public class DoctorController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('SYSTEM')")
-    public Doctor create(@RequestBody Doctor d) {
-        return service.create(d);
+    public DoctorResponseDTO create(@RequestBody Doctor d) {
+        return toDTO(service.create(d));
     }
 
     /**
@@ -49,8 +53,8 @@ public class DoctorController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("@securityRules.canEditDoctor(#id)")
-    public Doctor update(@PathVariable UUID id, @RequestBody Doctor d) {
-        return service.update(id, d);
+    public DoctorResponseDTO update(@PathVariable UUID id, @RequestBody Doctor d) {
+        return toDTO(service.update(id, d));
     }
 
     /**
@@ -61,5 +65,16 @@ public class DoctorController {
     @PreAuthorize("@securityRules.canDeleteDoctor(#id)")
     public void delete(@PathVariable UUID id) {
         service.delete(id);
+    }
+
+    // DTO mapping
+    private DoctorResponseDTO toDTO(Doctor d) {
+        DoctorResponseDTO dto = new DoctorResponseDTO();
+        dto.setId(d.getId());
+        dto.setFirstName(d.getFirstName());
+        dto.setLastName(d.getLastName());
+        dto.setSpecialty(d.getSpecialty());
+        dto.setEmail(d.getEmail());
+        return dto;
     }
 }

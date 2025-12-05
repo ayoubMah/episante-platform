@@ -53,4 +53,14 @@ public class SecurityRules {
     public boolean isSelf(UUID patientId) {
         return isOwnerPatient(patientId);
     }
+
+    public boolean canEditDoctor(UUID doctorId) {
+        return isOwnerDoctor(doctorId) || isAdmin();
+    }
+
+    public boolean canDeleteDoctor(UUID doctorId) {
+        return isAdmin();
+    }
+
+
 }

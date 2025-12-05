@@ -1,8 +1,9 @@
 package episante.aai.doctorservice;
 
+import com.upec.episantecommon.dto.DoctorProfileRequest;
+import com.upec.episantecommon.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +18,8 @@ public class DoctorService {
     }
 
     public void createProfile(DoctorProfileRequest req) {
-
         Doctor d = new Doctor();
-        d.setId(req.getId());                    
+        d.setId(req.getId());
         d.setFirstName(req.getFirstName());
         d.setLastName(req.getLastName());
         d.setEmail(req.getEmail());
@@ -38,10 +38,12 @@ public class DoctorService {
 
     public Doctor findById(UUID id) {
         return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new NotFoundException("Doctor not found"));
     }
 
     public Doctor create(Doctor d) {
+        d.setCreatedAt(OffsetDateTime.now());
+        d.setUpdatedAt(OffsetDateTime.now());
         return repo.save(d);
     }
 
@@ -54,7 +56,7 @@ public class DoctorService {
         existing.setSpecialty(updated.getSpecialty());
         existing.setRpps(updated.getRpps());
         existing.setClinicAddress(updated.getClinicAddress());
-        existing.setUpdatedAt(updated.getUpdatedAt());
+        existing.setUpdatedAt(OffsetDateTime.now());
         return repo.save(existing);
     }
 
