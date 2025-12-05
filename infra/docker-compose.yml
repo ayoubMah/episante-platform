@@ -43,8 +43,8 @@ services:
 
   patient-service:
     build:
-      context: ../patient-service
-      dockerfile: Dockerfile
+      context: ../     # root of the whole project
+      dockerfile: patient-service/Dockerfile
     container_name: patient-service
     depends_on:
       patient-db:
@@ -54,7 +54,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://patient-db:5432/patientdb
       SPRING_DATASOURCE_USERNAME: patient_user
-      SPRING_DATASOURCE_PASSWORD: patient _pass
+      SPRING_DATASOURCE_PASSWORD: patient_pass
     networks:
       - episante_net
 
@@ -77,8 +77,8 @@ services:
 
   doctor-service:
     build:
-      context: ../doctor-service
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: doctor-service/Dockerfile
     container_name: doctor-service
     depends_on:
       doctor-db:
@@ -112,8 +112,8 @@ services:
 
   appointment-service:
     build:
-      context: ../appointment-service
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: appointment-service/Dockerfile
     container_name: appointment-service
     depends_on:
       appointment-db:
@@ -121,7 +121,18 @@ services:
     ports:
       - "9093:9093"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://appointment-db:5432/appointmentdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://appointment-db:5432/appointmentdb
+      SPRING_DATASOURCE_USERNAME: appointment_user
+      SPRING_DATASOURCE_PASSWORD: appointment_pass
+      SPRING_APPLICATION_JSON: |
+        {
+          "application": {
+            "config": {
+              "doctor-url": "http://doctor-service:9092",
+              "patient-url": "http://patient-service:9091"
+            }
+          }
+        }
     networks:
       - episante_net
 
