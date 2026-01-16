@@ -1,10 +1,10 @@
 package episante.aai.doctorservice;
 
 import com.upec.episantecommon.dto.DoctorProfileRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.upec.episantecommon.dto.DoctorResponseDTO;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/internal/doctors")
@@ -16,9 +16,27 @@ public class DoctorInternalController {
         this.service = service;
     }
 
+    /**
+     * Internal endpoint called by Auth-Service during registration.
+     * MUST be blocked by API Gateway from external access.
+     */
     @PostMapping("/profile")
-    public void createProfile(@RequestBody DoctorProfileRequest req) {
-        service.createProfile(req);
+    @ResponseStatus(HttpStatus.CREATED)
+    public DoctorResponseDTO createProfile(@RequestBody @Valid DoctorProfileRequest req) {
+        // Reuse the logic we wrote in the Service layer
+        // Note: Make sure your Service returns the Entity so we can map it back
+        return toDTO(service.create(req));
+    }
+
+    // Simple mapper to keep it self-contained
+    private DoctorResponseDTO toDTO(Doctor d) {
+        DoctorResponseDTO dto = new DoctorResponseDTO();
+        dto.setId(d.getId());
+        dto.setFirstName(d.getFirstName());
+        dto.setLastName(d.getLastName());
+        dto.setEmail(d.getEmail());
+        dto.setSpecialty(d.getSpecialty());
+        return dto;
     }
 }
 

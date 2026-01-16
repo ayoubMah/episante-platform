@@ -17,7 +17,7 @@ public class SecurityConfig extends BaseSecurityConfig {
         return new String[]{
                 "/api/doctors",          // list doctors is public
                 "/api/doctors/*",        // doctor info is public
-                "/internal/**",
+                "/internal/**",          // We rely on Network/Gateway security for this
                 "/actuator/health"
         };
     }
