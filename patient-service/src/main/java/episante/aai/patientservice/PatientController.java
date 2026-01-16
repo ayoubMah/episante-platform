@@ -1,8 +1,12 @@
 package episante.aai.patientservice;
 
+import com.upec.episantecommon.dto.PatientResponseDTO;
+import com.upec.episantecommon.dto.PatientProfileRequest;
+import com.upec.episantecommon.security.SecurityRules;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.upec.episantecommon.security.SecurityRules;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -11,34 +15,45 @@ import java.util.UUID;
 public class PatientController {
 
     private final PatientService service;
-    private final SecurityRules rules;
 
-    public PatientController(PatientService service, SecurityRules rules) {
+    public PatientController(PatientService service) {
         this.service = service;
-        this.rules = rules;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
-    public List<Patient> all() {
-        return service.findAll();
+    public List<PatientResponseDTO> all() {
+        return service.findAll().stream().map(this::toDTO).toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("@securityRules.canViewPatient(#id)")
-    public Patient one(@PathVariable UUID id) {
-        return service.findById(id);
+    public PatientResponseDTO one(@PathVariable UUID id) {
+        return toDTO(service.findById(id));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@securityRules.isSelf(#id) or hasRole('ADMIN')")
-    public Patient update(@PathVariable UUID id, @RequestBody Patient p) {
-        return service.update(id, p);
+    public PatientResponseDTO update(@PathVariable UUID id, @RequestBody @Valid PatientProfileRequest req) {
+        return toDTO(service.update(id, req));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable UUID id) {
         service.delete(id);
+    }
+
+    private PatientResponseDTO toDTO(Patient p) {
+        PatientResponseDTO dto = new PatientResponseDTO();
+        dto.setId(p.getId());
+        dto.setFirstName(p.getFirstName());
+        dto.setLastName(p.getLastName());
+        dto.setEmail(p.getEmail());
+        dto.setPhone(p.getPhone());
+        dto.setDob(p.getDob());
+        dto.setGender(p.getGender());
+
+        return dto;
     }
 }

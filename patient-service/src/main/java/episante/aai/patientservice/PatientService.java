@@ -1,15 +1,18 @@
 package episante.aai.patientservice;
 
 import com.upec.episantecommon.dto.PatientProfileRequest;
+import com.upec.episantecommon.exception.DuplicateResourceException;
 import com.upec.episantecommon.exception.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional(readOnly = true)
 public class PatientService {
 
     private final PatientRepository repo;
@@ -18,7 +21,20 @@ public class PatientService {
         this.repo = repo;
     }
 
-    public void createProfile(PatientProfileRequest req) {
+    public List<Patient> findAll() {
+        return repo.findAll();
+    }
+
+    public Patient findById(UUID id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Patient not found: " + id));
+    }
+
+    @Transactional
+    public Patient createProfile(PatientProfileRequest req) {
+        if (repo.existsById(req.getId())) {
+            throw new DuplicateResourceException("Profile already exists");
+        }
 
         Patient p = new Patient();
         p.setId(req.getId());
@@ -27,44 +43,38 @@ public class PatientService {
         p.setEmail(req.getEmail());
         p.setPhone(req.getPhone());
 
+        // Safe Date Parsing
         if (req.getDob() != null) {
-            p.setDob(LocalDate.parse(req.getDob()));
+            try {
+                p.setDob(LocalDate.parse(req.getDob()));
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Invalid date format. Expected YYYY-MM-DD");
+            }
         }
 
-        repo.save(p);
-    }
-
-    public List<Patient> findAll() {
-        return repo.findAll();
-    }
-
-    public Patient findById(UUID id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Patient not found"));
-    }
-
-    public Patient create(Patient p) {
-        p.setCreatedAt(OffsetDateTime.now());
         return repo.save(p);
     }
 
-    public Patient update(UUID id, Patient updated) {
+    @Transactional
+    public Patient update(UUID id, PatientProfileRequest req) {
         Patient existing = findById(id);
 
-        existing.setFirstName(updated.getFirstName());
-        existing.setLastName(updated.getLastName());
-        existing.setEmail(updated.getEmail());
-        existing.setPhone(updated.getPhone());
-        existing.setDob(updated.getDob());
-        existing.setGender(updated.getGender());
+        // We generally use DTOs for updates too.
+        // For now, reusing ProfileRequest is okay, but usually, we have UpdatePatientRequest.
+        existing.setFirstName(req.getFirstName());
+        existing.setLastName(req.getLastName());
+        existing.setPhone(req.getPhone());
 
-        existing.setUpdatedAt(OffsetDateTime.now());
+        if (req.getDob() != null) {
+            existing.setDob(LocalDate.parse(req.getDob()));
+        }
 
         return repo.save(existing);
     }
 
+    @Transactional
     public void delete(UUID id) {
+        if (!repo.existsById(id)) throw new NotFoundException("Patient not found");
         repo.deleteById(id);
     }
 }
-

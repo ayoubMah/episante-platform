@@ -1,22 +1,26 @@
 package episante.aai.patientservice;
 
+import com.upec.episantecommon.enums.Gender;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString; // Safe usually, but be careful with relationships
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import com.upec.episantecommon.enums.Gender;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@ToString
 @Entity
 @Table(name = "patients")
 public class Patient {
 
     @Id
-    private UUID id;   // 🔥 NO @GeneratedValue → ID comes from auth-service
+    private UUID id; // Shared Identity (from Auth)
 
     @Column(nullable = false, length = 80)
     private String firstName;
@@ -43,6 +47,4 @@ public class Patient {
     @UpdateTimestamp
     @Column(nullable = false)
     private OffsetDateTime updatedAt;
-
-
 }
