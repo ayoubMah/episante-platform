@@ -1,12 +1,21 @@
 package episante.aai.authservice;
 
 import com.upec.episantecommon.enums.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
 public class RegisterRequest {
-
-    // Common fields
+    @NotBlank
+    @Email
     private String email;
+
+    @NotBlank
     private String password;
+
+    @NotNull
     private Role role;
 
     // Patient-specific fields
@@ -19,87 +28,4 @@ public class RegisterRequest {
     private String specialty;
     private String rppsNumber;
     private String address;
-
-
-    // getters and setters :)
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getDob() {
-        return dob;
-    }
-
-    public void setDob(String dob) {
-        this.dob = dob;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getSpecialty() {
-        return specialty;
-    }
-
-    public void setSpecialty(String specialty) {
-        this.specialty = specialty;
-    }
-
-    public String getRppsNumber() {
-        return rppsNumber;
-    }
-
-    public void setRppsNumber(String rppsNumber) {
-        this.rppsNumber = rppsNumber;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 }

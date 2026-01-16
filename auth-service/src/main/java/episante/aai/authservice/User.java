@@ -11,8 +11,7 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    private UUID id; // we control the ID no auto generated
 
     @Column(nullable = false, unique = true)
     private String email;
