@@ -1,6 +1,7 @@
 package episante.aai.doctorservice;
 
 import com.upec.episantecommon.dto.DoctorProfileRequest;
+import com.upec.episantecommon.exception.DuplicateResourceException;
 import com.upec.episantecommon.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
