@@ -8,7 +8,7 @@ export default function HomePage() {
       <section className="bg-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
-            Your Health, Simplified.
+            Your Health, Simplified :) .
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
             EpiSanté is your trusted partner for seamless healthcare management. Find doctors, book appointments, and manage your health journey with ease.

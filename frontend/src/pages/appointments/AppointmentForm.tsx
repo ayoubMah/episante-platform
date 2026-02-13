@@ -3,14 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { appointmentApi, doctorApi, patientApi } from "../../lib/api";
 import type { Appointment, Doctor, Patient } from "../../lib/api";
 
-
 export default function AppointmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-const [doctors, setDoctors] = useState<Doctor[]>([]);
-const [patients, setPatients] = useState<Patient[]>([]);
-
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
 
   const [form, setForm] = useState<Appointment>({
     doctorId: "",
@@ -37,10 +35,35 @@ const [patients, setPatients] = useState<Patient[]>([]);
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    if (id) await appointmentApi.update(id, form);
-    else await appointmentApi.create(form);
+    // 1. Create a Javascript Date object from the input string
+    const startDate = new Date(form.startTime);
+    const endDate = new Date(form.endTime);
 
-    navigate("/appointments");
+    // 2. Validate dates are real (prevents invalid date errors)
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        alert("Please enter valid dates");
+        return;
+    }
+
+    // 3. Convert to ISO String (e.g., "2026-02-13T05:40:00.000Z")
+    // This adds the milliseconds and the 'Z' timezone that Java requires.
+    const payload = {
+      ...form,
+      startTime: startDate.toISOString(),
+      endTime: endDate.toISOString(),
+    };
+
+    try {
+      if (id) await appointmentApi.update(id, payload);
+      else await appointmentApi.create(payload);
+
+      navigate("/appointments");
+    } catch (err: any) {
+      console.error(err);
+      // Helpful error alerting
+      const message = err.response?.data?.message || "Error saving appointment";
+      alert(message);
+    }
   };
 
   return (
@@ -50,7 +73,6 @@ const [patients, setPatients] = useState<Patient[]>([]);
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
         {/* Doctor */}
         <div>
           <label className="font-medium">Doctor</label>

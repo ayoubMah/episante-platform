@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
   baseURL: "/api",
@@ -17,7 +17,6 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
-
 
 export interface Doctor {
   id?: string;
@@ -39,7 +38,7 @@ export interface Patient {
   // LocalDate in Java expects "YYYY-MM-DD" string
   dob?: string;
   // Java Enum requires exact uppercase match
-  gender?: 'MALE' | 'FEMALE';
+  gender?: "MALE" | "FEMALE";
 }
 export interface Appointment {
   id?: string;
@@ -62,31 +61,70 @@ export interface AppointmentDetails {
   status: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  role: 'PATIENT' | 'DOCTOR';
+  firstName: string;
+  lastName: string;
+
+  // Patient specific
+  dob?: string;    // YYYY-MM-DD
+  phone?: string;
+
+  // Doctor specific
+  specialty?: string;
+  rppsNumber?: string; // Note: Backend expects 'rppsNumber', not 'rpps'
+  address?: string;
+}
 
 export const doctorApi = {
-  getAll: async () => (await api.get<Doctor[]>('/doctors')).data,
+  getAll: async () => (await api.get<Doctor[]>("/doctors")).data,
   getOne: async (id: string) => (await api.get<Doctor>(`/doctors/${id}`)).data,
-  create: async (data: Doctor) => (await api.post<Doctor>('/doctors', data)).data,
-  update: async (id: string, data: Doctor) => (await api.put<Doctor>(`/doctors/${id}`, data)).data,
-  delete: async (id: string) => (await api.delete(`/doctors/${id}`)),
+  create: async (data: Doctor) =>
+    (await api.post<Doctor>("/doctors", data)).data,
+  update: async (id: string, data: Doctor) =>
+    (await api.put<Doctor>(`/doctors/${id}`, data)).data,
+  delete: async (id: string) => await api.delete(`/doctors/${id}`),
 };
 
 export const patientApi = {
-  getAll: async () => (await api.get<Patient[]>('/patients')).data,
-  getOne: async (id: string) => (await api.get<Patient>(`/patients/${id}`)).data,
-  create: async (data: Patient) => (await api.post<Patient>('/patients', data)).data,
-  update: async (id: string, data: Patient) => (await api.put<Patient>(`/patients/${id}`, data)).data,
-  delete: async (id: string) => (await api.delete(`/patients/${id}`)),
+  getAll: async () => (await api.get<Patient[]>("/patients")).data,
+  getOne: async (id: string) =>
+    (await api.get<Patient>(`/patients/${id}`)).data,
+  create: async (data: Patient) =>
+    (await api.post<Patient>("/patients", data)).data,
+  update: async (id: string, data: Patient) =>
+    (await api.put<Patient>(`/patients/${id}`, data)).data,
+  delete: async (id: string) => await api.delete(`/patients/${id}`),
 };
 
 export const appointmentApi = {
-  getAll: async () => (await api.get<Appointment[]>('/appointments')).data,
-  getOne: async (id: string) => (await api.get<Appointment>(`/appointments/${id}`)).data,
+  getAll: async () => (await api.get<Appointment[]>("/appointments")).data,
+  getOne: async (id: string) =>
+    (await api.get<Appointment>(`/appointments/${id}`)).data,
   getDetails: async (id: string) =>
     (await api.get<AppointmentDetails>(`/appointments/${id}/details`)).data,
   create: async (data: Appointment) =>
-    (await api.post<Appointment>('/appointments', data)).data,
+    (await api.post<Appointment>("/appointments", data)).data,
   update: async (id: string, data: Appointment) =>
     (await api.put<Appointment>(`/appointments/${id}`, data)).data,
-  delete: async (id: string) => (await api.delete(`/appointments/${id}`)),
+  delete: async (id: string) => await api.delete(`/appointments/${id}`),
+};
+
+export const authApi = {
+  register: async (data: RegisterRequest) => {
+    // We don't save the token here usually, just return success
+    // The user will then be redirected to Login
+    await api.post("/auth/register", data);
+  },
+  
+  login: async (email: string, password: string) =>
+    (
+      await api.post<{ accessToken: string }>("/auth/login", {
+        email,
+        password,
+      })
+    ).data,
+  logout: async () => (await api.post("/auth/logout")).data,
 };

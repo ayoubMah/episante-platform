@@ -1,19 +1,13 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import DoctorList from "./pages/doctors/DoctorList";
-import DoctorForm from "./pages/doctors/DoctorForm";
 import PatientList from "./pages/patients/PatientList";
-import PatientForm from "./pages/patients/PatientForm";
 import AppointmentDetails from "./pages/appointments/AppointmentDetails";
 import AppointmentList from "./pages/appointments/AppointmentList";
 import AppointmentForm from "./pages/appointments/AppointmentForm";
 import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -30,6 +24,7 @@ function App() {
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/" element={<HomePage />} />
                 <Route path="/doctors/*" element={<DoctorList />} />{" "}
                 {/* Simplified for brevity */}
