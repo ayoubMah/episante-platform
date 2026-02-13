@@ -13,7 +13,7 @@ coverage/
 *.tsbuildinfo
 
 # Environment files : for now we keep .env files out of the repo
-# .env
+.env
 # .env.local
 # .env.*.local
 # !.env.example
