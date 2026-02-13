@@ -4,7 +4,7 @@ EpiSante is a production-grade, distributed medical platform inspired by Doctoli
 
 ## System Architecture
 
-![alt text](image.png)
+![alt text](/docs/image.png)
 
 ### Core Architectural Principles
 
