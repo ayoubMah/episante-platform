@@ -17,7 +17,7 @@ EpiSante is a production-grade, distributed medical platform inspired by Doctoli
 
 | Layer | Technologies |
 |-------|-------------|
-| **Backend** | Java 21, Spring Boot 3.x, Spring Security, OpenFeign, Go (Ingest/Alerts) |
+| **Backend** | Java 21, Spring Boot 4, Spring Security, OpenFeign, Go (Ingest/Alerts) |
 | **Data & Streaming** | PostgreSQL, Apache Kafka, Apache Spark, Flyway |
 | **Security** | HashiCorp Vault (Secrets & Transit Encryption), JWT |
 | **Frontend** | React, Vite, TypeScript, TailwindCSS, TanStack Query |
@@ -64,7 +64,7 @@ docker-compose up -d
 * **Monitoring (Grafana)**: `http://localhost:3001`
 * **Vault UI**: `http://localhost:8200`
 
-## 📡 Service Inventory
+## Service Inventory
 
 | Service | Port | Primary Responsibility |
 |---------|------|------------------------|
