@@ -1,28 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../../lib/auth";
+import { authApi } from "../../lib/api"; // Assuming api.ts exports this
+import { useAuth } from "../../lib/AuthContext"; // Import hook
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
       const result = await authApi.login(email, password);
 
-      // Save token
-      localStorage.setItem("accessToken", result.accessToken);
+      login(result.accessToken);
 
-      // Redirect
       navigate("/");
-    } catch (err: any) {
+    } catch (err) {
       setError("Invalid email or password.");
     }
   };
