@@ -204,6 +204,19 @@
       networks:
         - episante_net
 
+    notification-service:
+      build:
+        context: ../../notification-service
+        dockerfile: Dockerfile
+      container_name: notification-service
+      depends_on:
+        - kafka
+      environment:
+        # Tell Go to connect to the internal Docker network Kafka
+        - KAFKA_BROKER=kafka:9092
+      networks:
+        - episante_net
+
 
 
 
@@ -212,7 +225,7 @@
     doctor_data:
     appointment_data:
     auth_data:
-    kafka_data:  
+    kafka_data:
 
 
   networks:
