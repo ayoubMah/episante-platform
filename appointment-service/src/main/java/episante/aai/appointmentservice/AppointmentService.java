@@ -1,14 +1,24 @@
 package episante.aai.appointmentservice;
 
 import com.upec.episantecommon.dto.*;
+import com.upec.episantecommon.event.AppointmentCreatedEvent;
 import com.upec.episantecommon.enums.AppointmentStatus;
 import com.upec.episantecommon.exception.BadRequestException;
 import com.upec.episantecommon.exception.NotFoundException;
 import com.upec.episantecommon.security.SecurityUtils;
+import episante.aai.appointmentservice.config.KafkaTopicsProperties;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 import java.time.OffsetDateTime;
@@ -22,6 +32,12 @@ public class AppointmentService {
     private final AppointmentRepository repository;
     private final PatientClient patientClient;
     private final DoctorClient doctorClient;
+    private final KafkaTemplate<String, AppointmentCreatedEvent> kafkaTemplate;
+    private final KafkaTopicsProperties kafkaTopics;
+
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
+
+
 
     // ---------------------------
     // GET ALL (smart filtering)
@@ -50,29 +66,51 @@ public class AppointmentService {
     // ---------------------------
     public AppointmentResponseDTO create(CreateAppointmentRequestDTO request) {
 
+        // --- VALIDATION PHASE ---
         validateAppointmentRequest(request);
-
         validatePatient(request.getPatientId());
         validateDoctor(request.getDoctorId());
 
-        // Prevent double booking
+        // --- BUSINESS RULE: No double booking ---
         if (repository.existsOverlappingAppointment(
                 request.getDoctorId(), request.getStartTime(), request.getEndTime()
         )) {
             throw new BadRequestException("Doctor is already booked for this time slot.");
         }
 
-        Appointment a = new Appointment();
-        a.setDoctorId(request.getDoctorId());
-        a.setPatientId(request.getPatientId());
-        a.setStartTime(request.getStartTime());
-        a.setEndTime(request.getEndTime());
-        a.setStatus(AppointmentStatus.PLANNED);
+        // --- ENTITY CONSTRUCTION ---
+        Appointment appointment = new Appointment();
+        appointment.setDoctorId(request.getDoctorId());
+        appointment.setPatientId(request.getPatientId());
+        appointment.setStartTime(request.getStartTime());
+        appointment.setEndTime(request.getEndTime());
+        appointment.setStatus(AppointmentStatus.PLANNED);
+        // createdAt and updatedAt should be handled by @CreationTimestamp
+        // and @UpdateTimestamp on the entity — remove manual setting
 
-        a.setCreatedAt(OffsetDateTime.now());
-        a.setUpdatedAt(OffsetDateTime.now());
+        // --- PERSISTENCE ---
+        Appointment saved = repository.save(appointment);
+        log.info("Appointment created successfully. id={}, doctorId={}, patientId={}",
+                saved.getId(), saved.getDoctorId(), saved.getPatientId());
 
-        Appointment saved = repository.save(a);
+        // --- EVENT PUBLISHING ---
+        AppointmentCreatedEvent event = new AppointmentCreatedEvent(
+                saved.getId(),
+                saved.getDoctorId(),
+                saved.getPatientId(),
+                saved.getStartTime(),
+                saved.getEndTime(),
+                saved.getStatus().name()
+        );
+
+        // The key is the appointmentId (as String).
+        // Kafka uses the key for partitioning — all events for the same
+        // appointment will land on the same partition, preserving order.
+        kafkaTemplate.send(kafkaTopics.appointmentCreated(), saved.getId().toString(), event);
+
+
+        // --- RESPONSE ---
+        // We return a DTO, never the raw entity.
         return toResponse(saved);
     }
 
