@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://appointment-db:5432/appointmentdb
     username: appointment_user
-    password: appointment_pass
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:

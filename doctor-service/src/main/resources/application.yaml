@@ -3,9 +3,9 @@ spring:
     name: doctor-service
 
   datasource:
-    url: jdbc:postgresql://doctor-db:5432/doctordb
-    username: doctor_user
-    password: doctor_pass
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/doctordb}
+    username: ${SPRING_DATASOURCE_USERNAME:doctor_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:doctor_pass}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,7 +27,7 @@ server:
 
 application:
   security:
-    jwt-secret: ${JWT_SECRET}
+    jwt-secret: ${JWT_SECRET:default_dev_secret_key_change_in_prod_12345}
 
 logging:
   level:

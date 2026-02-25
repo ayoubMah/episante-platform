@@ -14,7 +14,8 @@ coverage/
 
 # Environment files : for now we keep .env files out of the repo
 .env
-.\.env
+infra/compose/.env
+**/\.env
 # .env.local
 # .env.*.local
 # !.env.example
