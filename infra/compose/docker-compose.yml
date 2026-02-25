@@ -26,7 +26,7 @@
 
     # --- Kafka Message Broker (KRaft Mode) ---
     kafka:
-      image: bitnami/kafka:3.6
+      image: bitnami/kafka:3.7.0
       container_name: episante-kafka
       ports:
         - "9094:9094"
@@ -45,6 +45,12 @@
         - kafka_data:/bitnami/kafka
       networks:
         - episante_net
+      healthcheck:
+        test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+        interval: 10s
+        timeout: 10s
+        retries: 10
+        start_period: 30s  # Kafka is slow to start — give it time
 
     patient-db:
       image: postgres:16
@@ -72,6 +78,8 @@
       depends_on:
         patient-db:
           condition: service_healthy  # <--- Waits for "pg_isready" to return true
+        kafka:
+          condition: service_healthy
       ports:
         - "9091:9091"
       environment:
@@ -107,6 +115,8 @@
       depends_on:
         doctor-db:
           condition: service_healthy  # <--- Waits for "pg_isready" to return true
+        kafka:
+          condition: service_healthy
       ports:
         - "9092:9092"
       environment:
@@ -142,6 +152,8 @@
       container_name: appointment-service
       depends_on:
         appointment-db:
+          condition: service_healthy
+        kafka:
           condition: service_healthy
       ports:
         - "9093:9093"
@@ -187,8 +199,10 @@
       depends_on:
         auth-db:
           condition: service_healthy
+        kafka:
+          condition: service_healthy
       ports:
-        - "9094:9094"
+        - "9095:9094"
       env_file:
       - ../../.env
       environment:
