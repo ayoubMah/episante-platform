@@ -27,7 +27,7 @@ server:
 
 application:
   security:
-    jwt-secret: "V5P0gvAl/J4VzUiijelQv79BLiLtm1KIrDqx9aQF2Mw="
+    jwt-secret: ${JWT_SECRET}
 
 
 logging:

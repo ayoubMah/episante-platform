@@ -57,7 +57,7 @@ application:
     doctor-url: http://doctor-service:9092
 
   security:
-    jwt-secret: "V5P0gvAl/J4VzUiijelQv79BLiLtm1KIrDqx9aQF2Mw="
+    jwt-secret: ${JWT_SECRET}
 
 app:
   kafka:

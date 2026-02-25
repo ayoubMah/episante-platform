@@ -189,6 +189,8 @@
           condition: service_healthy
       ports:
         - "9094:9094"
+      env_file:
+      - ../../.env
       environment:
         SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
         SPRING_DATASOURCE_USERNAME: auth_user
@@ -199,7 +201,7 @@
         APPLICATION_CONFIG_DOCTOR-URL: http://doctor-service:9092
 
         # JWT Secret for shared module
-        APPLICATION_SECURITY_JWT-SECRET: "V5P0gvAl/J4VzUiijelQv79BLiLtm1KIrDqx9aQF2Mw="
+        APPLICATION_SECURITY_JWT-SECRET: ${JWT_SECRET}
 
       networks:
         - episante_net
