@@ -8,36 +8,46 @@ EpiSante is a production-grade, distributed medical platform inspired by Doctoli
 
 ### Core Architectural Principles
 
-* **Database-per-Service**: Each microservice owns its own PostgreSQL instance. No shared schemas.
-* **Security-First**: Centralized secrets management via HashiCorp Vault.
-* **Polyglot Streaming**: High-velocity wearable data is ingested via Go, processed by Apache Spark, and managed by Kafka.
-* **Operational Observability**: Full-stack monitoring using Prometheus, Grafana, and Loki.
+- **Database-per-Service**: Each microservice owns its own PostgreSQL instance. No shared schemas. Direct cross-database joins are strictly forbidden.
+
+- **Event-Driven Architecture (EDA)**: Administrative workflows (like booking notifications) are decoupled using **Apache Kafka**, ensuring non-blocking, resilient processing.
+
+- **Polyglot Microservices**: **Java/Spring Boot** powers the heavy transactional domain (ACID compliance), while **Go (Golang)** handles high-concurrency asynchronous tasks (Notifications, IoT ingestion).
+
+- **Security-First**: Centralized configuration and secrets management via **HashiCorp Vault**. Authentication is stateless via shared JWT filters.
+
+- **Shared Library**: Common DTOs, Event Contracts, and Security configurations are centralized in a custom Maven dependency (`episante-common`).
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Backend** | Java 21, Spring Boot 4, Spring Security, OpenFeign, Go (Ingest/Alerts) |
-| **Data & Streaming** | PostgreSQL, Apache Kafka, Apache Spark, Flyway |
-| **Security** | HashiCorp Vault (Secrets & Transit Encryption), JWT |
-| **Frontend** | React, Vite, TypeScript, TailwindCSS, TanStack Query |
-| **Infrastructure** | Docker Compose, Nginx (Gateway), Prometheus, Grafana |
+
+| **Layer**                   | **Technologies**                                                |
+| --------------------------- | --------------------------------------------------------------- |
+| **Backend (Transactional)** | Java 21, Spring Boot 3, Spring Security, Spring Cloud OpenFeign |
+| **Backend (Async/IoT)**     | Go (Golang), segmentio/kafka-go                                 |
+| **Data & Messaging**        | PostgreSQL 16, Apache Kafka (KRaft Mode), Flyway                |
+| **Big Data / Telemetry**    | Apache Spark, MQTT (Planned Phase 2)                            |
+| **Security**                | HashiCorp Vault (KV Secrets Engine), JWT                        |
+| **Frontend**                | React, Vite, TypeScript, TailwindCSS, Axios                     |
+| **Infrastructure**          | Docker Compose, Nginx (API Gateway)                             |
+
 
 ## Project Structure
 
 ```
 episante/
-├── backend/                # Spring Boot & Go Microservices
-│   ├── auth-service/       # JWT & Identity Management
-│   ├── patient-service/    # Patient Records & PII
-│   ├── ingest-service/     # IoT/Wearable Data Ingest (Go)
-│   └── ...                 # Other domain services
-├── frontend/               # React TypeScript SPA
-├── infra/                  # Orchestration & Configuration
-│   ├── docker-compose.yml  # System-wide orchestration
-│   ├── gateway/            # Nginx Reverse Proxy configs
-│   └── vault/              # Security policies and setup
-└── streaming/              # Spark jobs and Kafka definitions
+├── appointment-service/         # Java: Booking management & Kafka Producer
+├── auth-service/                # Java: Identity, JWT generation
+├── doctor-service/              # Java: Doctor profiles & availability
+├── episante-common/             # Java: Shared Library (DTOs, Events, Security Filters)
+├── frontend/                    # React: TypeScript SPA (Vite)
+├── gateway/                     # Nginx: Reverse Proxy & API Gateway routing
+├── health-alert-engine/         # Go: Real-time telemetry alerts (Phase 2)
+├── infra/
+│   └── compose/                 # Docker Compose, .env, and orchestration
+├── ingest-wearables-service/    # Go: High-throughput IoT wearable ingestion (Phase 2)
+├── notification-service/        # Go: Kafka Consumer for email/SMS alerts
+└── patient-service/             # Java: Patient records & PII
 ```
 
 ## Quick Start
@@ -46,35 +56,48 @@ episante/
 
 * Docker & Docker Compose
 * Java 21 (for local builds)
+* Go 1.24
 * Node.js 20+
 
-### 2. Launch Infrastructure
+### 2. Prepare the Environment
 
-Navigate to the infrastructure directory and spin up the environment:
+Ensure your local Maven cache has the latest shared library:
+
+Bash
 
 ```bash
-cd infra
-docker-compose up -d
+cd episante-common
+mvn clean install -DskipTests
 ```
 
-### 3. Access the Platform
+### 3. Launch Infrastructure
 
-* **Web Portal**: `http://localhost:3000`
-* **API Gateway**: `http://localhost:80/api/v1/`
-* **Monitoring (Grafana)**: `http://localhost:3001`
-* **Vault UI**: `http://localhost:8200`
+Navigate to the compose directory and spin up the entire isolated network:
+
+Bash
+
+```bash
+cd infra/compose
+docker-compose up -d --build
+```
+
+### 4. Access the Platform
+
+- **Web Portal (Frontend)**: `http://localhost:5173`
+
+- **API Gateway (Backend Entrypoint)**: `http://localhost:8089/api/`
+
+- **HashiCorp Vault UI**: `http://localhost:8200` (Token: `episante-super-secret-root-token`)
+
 
 ## Service Inventory
 
-| Service | Port | Primary Responsibility |
-|---------|------|------------------------|
-| **Gateway** | 80/443 | Traffic Routing & SSL Termination |
-| **Auth** | 8081 | Authentication & RBAC |
-| **Patient** | 8082 | Patient Profiles & Medical History |
-| **Appt** | 8083 | Schedule & Booking Management |
-| **Ingest** | 8085 | Real-time Wearable Telemetry (High Throughput) |
-| **Alerts** | 8086 | Anomaly Detection & Notifications |
 
-## Database Philosophy
-
-We enforce strict service isolation. Communication between services occurs exclusively via **OpenFeign** (Sync) or **Kafka** (Async). Direct cross-database joins are strictly forbidden to ensure each service can be scaled or migrated independently.
+|**Service**|**Internal Port**|**Gateway Route**|**Primary Responsibility**|
+|---|---|---|---|
+|**Gateway (Nginx)**|8089|`/`|Single entry point, CORS, traffic routing|
+|**Auth Service**|9094|`/api/auth/`|Authentication, JWT issuance|
+|**Patient Service**|9091|`/api/patients/`|Patient CRUD, Medical History|
+|**Doctor Service**|9092|`/api/doctors/`|Doctor CRUD, Specialties|
+|**Appt Service**|9093|`/api/appointments/`|Scheduling, overlap validation, Event publishing|
+|**Notif Service**|N/A|_Internal Kafka_|Listens to `appointment.created`, sends emails (Go)|
