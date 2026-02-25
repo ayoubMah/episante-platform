@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -30,8 +31,10 @@ func main() {
 		Brokers:  []string{brokerAddress},
 		GroupID:  "notification-group-go",
 		Topic:    "appointment.created",
-		MinBytes: 10e3,
+		MinBytes: 1,
 		MaxBytes: 10e6,
+		StartOffset: kafka.FirstOffset,
+		MaxWait:  1 * time.Second,
 	})
 
 	// Graceful shutdown — listen for SIGINT (Ctrl+C) or SIGTERM (Docker stop)

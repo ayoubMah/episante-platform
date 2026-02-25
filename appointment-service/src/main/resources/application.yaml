@@ -30,6 +30,10 @@ spring:
       properties:
         spring.json.add.type.headers: true # Critical: Tells the consumer what class to deserialize to
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
 
 server:
   port: 9093
@@ -49,15 +53,13 @@ cloud:
           connectTimeout: 5000 # 5 seconds to connect
           readTimeout: 5000    # 5 seconds to wait for data
 
----
 # ? External service URLs (used by Feign clients)
 application:
   config:
-    patient-url: http://patient-service:9091
-    doctor-url: http://doctor-service:9092
-
+    patient-url: ${APPLICATION_CONFIG_PATIENT-URL:http://localhost:9091}
+    doctor-url: ${APPLICATION_CONFIG_DOCTOR-URL:http://localhost:9092}
   security:
-    jwt-secret: ${JWT_SECRET}
+    jwt-secret: ${APPLICATION_SECURITY_JWT-SECRET:fallback}
 
 app:
   kafka:
