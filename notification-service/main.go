@@ -63,6 +63,7 @@ func main() {
 			}
 			// Any other error is transient — log and continue, never crash
 			log.Printf("❌ Error reading message: %v", err)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 

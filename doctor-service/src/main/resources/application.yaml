@@ -37,7 +37,7 @@ spring:
         backend: secret
         default-context: episante
         profile-separator: '/'
-        version: 2
+        version: 1
 
 server:
   port: 9092

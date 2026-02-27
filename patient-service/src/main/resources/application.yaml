@@ -3,7 +3,7 @@ spring:
     name: patient-service
 
   config:
-    import: "vault://"
+    import: "optional:vault://"
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/patientdb}
@@ -36,6 +36,8 @@ spring:
         enabled: true
         backend: secret
         default-context: episante
+        profile-separator: '/'
+        version: 1
 
 server:
   port: 9091

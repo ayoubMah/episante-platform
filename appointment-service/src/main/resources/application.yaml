@@ -3,7 +3,7 @@ spring:
     name: appointment-service
 
   config:
-    import: "vault://"
+    import: "optional:vault://"
 
   datasource:
     url: jdbc:postgresql://appointment-db:5432/appointmentdb
@@ -31,53 +31,50 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: true # Critical: Tells the consumer what class to deserialize to
+        spring.json.add.type.headers: true
 
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
+  cloud:                          # ✅ nested under spring
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 5000
+            readTimeout: 5000
+    vault:
+      host: localhost              # fallback for local dev
+      port: 8200
+      scheme: http
+      authentication: TOKEN
+      kv:
+        enabled: true
+        backend: secret
+        default-context: episante
+        profile-separator: '/'
+        version: 1
+      # token is NOT here — injected directly via SPRING_CLOUD_VAULT_TOKEN env var
 
 server:
   port: 9093
 
-logging:
-  level:
-    root: INFO
-    org.springframework: INFO
-    org.hibernate.SQL: DEBUG   # disable in production
-    org.hibernate.type.descriptor.sql: TRACE
-
-cloud:
-  openfeign:
-    client:
-      config:
-        default:
-          connectTimeout: 5000 # 5 seconds to connect
-          readTimeout: 5000    # 5 seconds to wait for data
-
-  vault:
-    host: ${VAULT_HOST:localhost}
-    port: 8200
-    scheme: http
-    authentication: TOKEN
-    token: ${VAULT_ROOT_TOKEN}
-    kv:
-      enabled: true
-      backend: secret
-      default-context: episante
-
-
-
-# ? External service URLs (used by Feign clients)
 application:
   config:
     patient-url: ${APPLICATION_CONFIG_PATIENT-URL:http://localhost:9091}
     doctor-url: ${APPLICATION_CONFIG_DOCTOR-URL:http://localhost:9092}
   security:
-    jwt-secret: ${jwt-secret}
+    jwt-secret: ${jwt-secret:}
 
 app:
   kafka:
     topics:
       appointment-created: appointment.created
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE

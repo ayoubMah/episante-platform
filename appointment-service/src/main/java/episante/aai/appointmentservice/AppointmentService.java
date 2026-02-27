@@ -9,13 +9,9 @@ import com.upec.episantecommon.security.SecurityUtils;
 import episante.aai.appointmentservice.config.KafkaTopicsProperties;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,10 +99,24 @@ public class AppointmentService {
                 saved.getStatus().name()
         );
 
+        log.info("📤 Publishing event to topic='{}' appointmentId={}",
+                kafkaTopics.appointmentCreated(), saved.getId());
+
         // The key is the appointmentId (as String).
         // Kafka uses the key for partitioning — all events for the same
         // appointment will land on the same partition, preserving order.
-        kafkaTemplate.send(kafkaTopics.appointmentCreated(), saved.getId().toString(), event);
+        kafkaTemplate.send(kafkaTopics.appointmentCreated(), saved.getId().toString(), event)
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        log.error("❌ Kafka publish FAILED appointmentId={} error={}",
+                                saved.getId(), ex.getMessage(), ex);
+                    } else {
+                        log.info("✅ Event published topic={} partition={} offset={}",
+                                result.getRecordMetadata().topic(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset());
+                    }
+                });
 
 
         // --- RESPONSE ---
