@@ -2,6 +2,9 @@ spring:
   application:
     name: appointment-service
 
+  config:
+    import: "vault://"
+
   datasource:
     url: jdbc:postgresql://appointment-db:5432/appointmentdb
     username: appointment_user
@@ -53,13 +56,26 @@ cloud:
           connectTimeout: 5000 # 5 seconds to connect
           readTimeout: 5000    # 5 seconds to wait for data
 
+  vault:
+    host: ${VAULT_HOST:localhost}
+    port: 8200
+    scheme: http
+    authentication: TOKEN
+    token: ${VAULT_ROOT_TOKEN}
+    kv:
+      enabled: true
+      backend: secret
+      default-context: episante
+
+
+
 # ? External service URLs (used by Feign clients)
 application:
   config:
     patient-url: ${APPLICATION_CONFIG_PATIENT-URL:http://localhost:9091}
     doctor-url: ${APPLICATION_CONFIG_DOCTOR-URL:http://localhost:9092}
   security:
-    jwt-secret: ${APPLICATION_SECURITY_JWT-SECRET:fallback}
+    jwt-secret: ${jwt-secret}
 
 app:
   kafka:

@@ -53,6 +53,30 @@
       networks:
         - episante_net
 
+    # --- HashiCorp Vault (Secrets Management) ---
+    vault:
+      image: hashicorp/vault:1.15
+      container_name: episante-vault
+      ports:
+        - "8200:8200"
+      environment:
+        VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_ROOT_TOKEN}
+        VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      cap_add:
+        - IPC_LOCK
+      volumes:
+        - vault_data:/vault/data
+        # Init script that seeds secrets automatically on first start
+        - ./vault/init-vault.sh:/init-vault.sh
+      healthcheck:
+        test: ["CMD-SHELL", "vault status -address=http://localhost:8200"]
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 10s
+      networks:
+        - episante_net
+
     patient-db:
       image: postgres:16
       container_name: patient-db
@@ -82,6 +106,8 @@
           condition: service_healthy  # <--- Waits for "pg_isready" to return true
         kafka:
           condition: service_healthy
+        vault:
+          condition: service_healthy
       ports:
         - "9091:9091"
       environment:
@@ -89,7 +115,8 @@
         SPRING_DATASOURCE_USERNAME: patient_user
         SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD_PATIENT}
         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-        APPLICATION_SECURITY_JWT-SECRET: ${JWT_SECRET}
+        VAULT_HOST: vault
+        VAULT_ROOT_TOKEN: ${VAULT_ROOT_TOKEN}
       networks:
         - episante_net
 
@@ -121,6 +148,8 @@
           condition: service_healthy  # <--- Waits for "pg_isready" to return true
         kafka:
           condition: service_healthy
+        vault:
+          condition: service_healthy
       ports:
         - "9092:9092"
       environment:
@@ -128,7 +157,8 @@
         SPRING_DATASOURCE_USERNAME: doctor_user
         SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD_DOCTOR}
         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-        APPLICATION_SECURITY_JWT-SECRET: ${JWT_SECRET}
+        VAULT_HOST: vault
+        VAULT_ROOT_TOKEN: ${VAULT_ROOT_TOKEN}
 
       networks:
         - episante_net
@@ -161,6 +191,8 @@
           condition: service_healthy
         kafka:
           condition: service_healthy
+        vault:
+          condition: service_healthy
       ports:
         - "9093:9093"
       environment:
@@ -170,7 +202,8 @@
         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
         APPLICATION_CONFIG_DOCTOR-URL: http://doctor-service:9092
         APPLICATION_CONFIG_PATIENT-URL: http://patient-service:9091
-        APPLICATION_SECURITY_JWT-SECRET: ${JWT_SECRET}
+        VAULT_HOST: vault
+        VAULT_ROOT_TOKEN: ${VAULT_ROOT_TOKEN}
       networks:
         - episante_net
 
@@ -202,6 +235,8 @@
           condition: service_healthy
         kafka:
           condition: service_healthy
+        vault:
+          condition: service_healthy
       ports:
         - "9095:9094"
 
@@ -213,8 +248,9 @@
         # Feign URLs
         APPLICATION_CONFIG_PATIENT-URL: http://patient-service:9091
         APPLICATION_CONFIG_DOCTOR-URL: http://doctor-service:9092
-        # JWT Secret for shared module
-        APPLICATION_SECURITY_JWT-SECRET: ${JWT_SECRET}
+
+        VAULT_HOST: vault               
+        VAULT_ROOT_TOKEN: ${VAULT_ROOT_TOKEN}
 
       networks:
         - episante_net
@@ -238,6 +274,7 @@
     appointment_data:
     auth_data:
     kafka_data:
+    vault_data:
 
 
   networks:
