@@ -135,15 +135,14 @@ def main():
         size = download_file(url, dest_file)
 
 
-        if size < 10 * 1024 * 1024:  # < 10 MB = suspect
+        if size < 10 * 1024 * 1024: 
             print(f" ATTENTION : fichier {dest_file} très petit ({size} bytes). "
                   f"Vérifier l'URL ou le proxy.")
 
         print(" Job 1 terminé avec succès.")
         print(f"   Fichier téléchargé : {dest_file}")
 
-        # Ici, on NE met PAS à jour le fichier d'URLs.
-        # Ce sera géré par Airflow (XCom / task dédiée) pour rester idempotent.
+ 
 
     except Exception as e:
         print(f" Erreur pendant le téléchargement : {e}")

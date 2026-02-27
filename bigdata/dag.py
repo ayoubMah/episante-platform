@@ -42,7 +42,7 @@ def check_pending_urls():
     print("ℹ Aucune URL pending — pipeline ignorée")
     return False
 
-# ── DAG ───────────────────────────────────────────────────────────────────────
+
 with DAG(
     dag_id="sirius_pipeline",
     description="Pipeline SPARCS : Download → Bronze → Silver → Gold",
@@ -53,39 +53,39 @@ with DAG(
     tags=["sirius", "sparcs", "pipeline"],
 ) as dag:
 
-    # ── Task 0 : Vérifier s'il y a des fichiers à traiter
+    # ── Task 0 
     t0_check = ShortCircuitOperator(
         task_id="check_pending_urls",
         python_callable=check_pending_urls,
     )
 
-    # ── Task 1 : Téléchargement CSV
+    # ── Task 1
     t1_download = BashOperator(
         task_id="job1_download",
         bash_command=f"{PYTHON_BIN} {SPARK_JOBS_DIR}/job11.py",
         execution_timeout=timedelta(hours=2),
     )
 
-    # ── Task 2 : CSV → Bronze HDFS Parquet
+    # ── Task 2 
     t2_bronze = BashOperator(
         task_id="job2_bronze",
         bash_command=f"{PYTHON_BIN} {SPARK_JOBS_DIR}/job22.py",
         execution_timeout=timedelta(hours=2),
     )
 
-    # ── Task 3 : Bronze → Silver MongoDB
+    # ── Task 3
     t3_silver = BashOperator(
         task_id="job3_silver",
         bash_command=f"{PYTHON_BIN} {SPARK_JOBS_DIR}/job33.py",
         execution_timeout=timedelta(hours=2),
     )
 
-    # ── Task 4 : Silver → Gold MySQL
+    # ── Task 4 
     t4_gold = BashOperator(
         task_id="job4_gold",
         bash_command=f"{PYTHON_BIN} {SPARK_JOBS_DIR}/job44.py",
         execution_timeout=timedelta(hours=1),
     )
 
-    # ── Dépendances : séquentiel strict
+    # ── Dépendances 
     t0_check >> t1_download >> t2_bronze >> t3_silver >> t4_gold
