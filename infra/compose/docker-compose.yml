@@ -78,6 +78,30 @@
       networks:
         - episante_net
 
+    # --- Prometheus (Metrics Scraper) ---
+    prometheus:
+      image: prom/prometheus:v2.50.1
+      container_name: episante-prometheus
+      ports:
+        - "9090:9090"
+      volumes:
+        - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      networks:
+        - episante_net
+
+    # --- Grafana (Dashboards) ---
+    grafana:
+      image: grafana/grafana:10.3.3
+      container_name: episante-grafana
+      ports:
+        - "3001:3000" # Mapped to 3001 so it doesn't conflict with React
+      environment:
+        - GF_SECURITY_ADMIN_PASSWORD=admin
+      depends_on:
+        - prometheus
+      networks:
+        - episante_net
+
     patient-db:
       image: postgres:16
       container_name: patient-db
@@ -118,6 +142,7 @@
         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
         SPRING_CLOUD_VAULT_HOST: vault
         SPRING_CLOUD_VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+        MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
       networks:
         - episante_net
 
@@ -160,6 +185,7 @@
         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
         SPRING_CLOUD_VAULT_HOST: vault
         SPRING_CLOUD_VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+        MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 
       networks:
         - episante_net
@@ -205,6 +231,7 @@
         APPLICATION_CONFIG_PATIENT-URL: http://patient-service:9091
         SPRING_CLOUD_VAULT_HOST: vault
         SPRING_CLOUD_VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+        MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
       networks:
         - episante_net
 
@@ -252,6 +279,7 @@
 
         SPRING_CLOUD_VAULT_HOST: vault
         SPRING_CLOUD_VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
+        MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,prometheus
 
       networks:
         - episante_net
