@@ -35,44 +35,44 @@
 - [x] Local Nginx reverse proxy
 - [x] Local microservices network (docker-compose networks)
 - [x] Local multi-DB setup (patientdb, doctordb, appointmentdb)
-- [ ] Local Key Vault setup (HashiCorp Vault dev mode)
-- [ ] Local Kafka cluster (single-node)
-- [ ] Local Spark Streaming (reading dummy data)
+- [x] Local Key Vault setup (HashiCorp Vault dev mode)
+- [x] Local Kafka cluster (single-node)
+- [x] Local kafka Streaming (reading dummy data)
 - [ ] Local monitoring (optional: Prometheus + Grafana)
 
 ---
 
 ##  Phase 3 — Deployment to University VMs
 
-- [ ] Deploy Frontend VM
-- [ ] Deploy Backend VM (microservices + docker-compose)
-- [ ] Deploy Data VM (PostgreSQL cluster)
-- [ ] Deploy Gateway VM (Nginx reverse proxy)
-- [ ] Configure firewall + routing (IPFire GREEN/LAN network)
-- [ ] Frontend → Gateway → Backend pipeline fully functional on VMs
+- [x] Deploy Frontend VM
+- [x] Deploy Backend VM (microservices + docker-compose)
+- [x] Deploy Data VM (PostgreSQL cluster)
+- [x] Deploy Gateway VM (Nginx reverse proxy)
+- [x] Configure firewall + routing (IPFire GREEN/LAN network)
+- [x] Frontend → Gateway → Backend pipeline fully functional on VMs
 
 ---
 
 ## Phase 4 — Security Layer (Key Vault)
 
-- [ ] Install HashiCorp Vault on Security VM
-- [ ] Move secrets to Vault:
-  - [ ] DB passwords
-  - [ ] Kafka credentials
-  - [ ] JWT secret
-- [ ] Connect Spring Boot to Vault
+- [x] Install HashiCorp Vault on Security VM
+- [x] Move secrets to Vault:
+  - [x] DB passwords
+  - [x] Kafka credentials
+  - [x] JWT secret
+- [x] Connect Spring Boot to Vault
 - [ ] Secure communication (HTTPS / TLS)
 
 ---
 
 ## Phase 5 — Real-Time Engine (Kafka + Spark)
 
-- [ ] Kafka producer (INGEST service)
-- [ ] Kafka consumer (ALERT service)
-- [ ] Spark Streaming reads sensor stream
-- [ ] Spark publishes alerts back to Kafka
+- [x] Kafka producer (INGEST service)
+- [x] Kafka consumer (ALERT service)
+- [ ] kafka Streaming reads sensor stream
+- [ ] kafka publishes alerts back to Kafka
 - [ ] Alerts consumed by Health Alert Engine
-- [ ] Doctor UI receives alert notification
+- [x] Doctor UI receives alert notification
 
 ---
 
