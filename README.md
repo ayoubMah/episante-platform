@@ -2,7 +2,15 @@
 
 EpiSante is a production-grade, distributed medical platform inspired by Doctolib. It leverages a modern microservices architecture to ensure high availability, data isolation, and scalable real-time health monitoring.
 
-## System Architecture
+## Architecture Overview
+
+The platform is designed in two layers. The **microservices core** handles real-time transactional and event-driven flows. The **full platform** extends this with a big data / telemetry layer for long-term analytics.
+
+---
+
+### Microservices & Event-Driven Architecture
+
+The diagram below shows the operational core: the API gateway, transactional backend services, Kafka-driven async workflows, IoT wearable ingestion, and database isolation.
 
 ```mermaid
 flowchart TD
@@ -101,8 +109,17 @@ flowchart TD
     Doctor -.->|Fetch Credentials| Vault
 ```
 
+![Microservices & Event-Driven Architecture](/docs/imageA.png)
 
-![alt text](/docs/image.png)
+---
+
+### Full Platform Architecture (incl. Big Data Layer)
+
+The full platform adds a Firewall perimeter, a Proxy VM for external exposure, and a Big Data cluster (HDFS, Apache Spark, MongoDB) for long-term storage and batch analytics of telemetry data collected from wearables.
+
+![Full Platform Architecture with Big Data Layer](/docs/image.png)
+
+---
 
 ### Core Architectural Principles
 
