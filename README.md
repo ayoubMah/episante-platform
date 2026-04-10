@@ -4,6 +4,104 @@ EpiSante is a production-grade, distributed medical platform inspired by Doctoli
 
 ## System Architecture
 
+```mermaid
+flowchart TD
+    %% Define styles for readability
+    classDef external fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef gateway fill:#cce5ff,stroke:#004085,stroke-width:2px;
+    classDef goService fill:#d1ecf1,stroke:#0c5460,stroke-width:2px;
+    classDef javaService fill:#d4edda,stroke:#155724,stroke-width:2px;
+    classDef kafka fill:#fff3cd,stroke:#856404,stroke-width:2px;
+    classDef db fill:#e2e3e5,stroke:#383d41,stroke-width:2px;
+    classDef vault fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
+
+    %% External / Clients
+    subgraph External [External Actors / Internet]
+        Wearables["Medical Wearables / IoT"]:::external
+        UI["Browser / React UI"]:::external
+    end
+
+    %% Gateway Layer
+    subgraph VM_Gateway [VM: Gateway 172.20.0.60]
+        Nginx["Nginx API Gateway / Reverse Proxy"]:::gateway
+    end
+
+    %% Security Layer
+    subgraph VM_Security [VM: Security]
+        Vault["HashiCorp Vault"]:::vault
+    end
+
+    %% Streaming & IoT Layer
+    subgraph VM_Streaming [VM: Streaming 172.20.0.50]
+        Ingest["Ingest Wearables Service <br/>(Go)"]:::goService
+        KafkaStreams["Kafka Streams App <br/>(Identify Anomalies)"]:::javaService
+        AlertEngine["Health Alert Engine <br/>(Go)"]:::goService
+    end
+
+    %% Message Broker
+    subgraph VM_Kafka [VM: Kafka 172.20.0.70]
+        KafkaBroker[("Apache Kafka Topics")]:::kafka
+    end
+
+    %% Core Transactional Backend
+    subgraph VM_Backend [VM: Backend 172.20.0.20]
+        Auth["Auth Service <br/>(Java)"]:::javaService
+        Appoint["Appoint Service <br/>(Java)"]:::javaService
+        Patient["Patient Service <br/>(Java)"]:::javaService
+        Doctor["Doctor Service <br/>(Java)"]:::javaService
+        Notif["Notif Service <br/>(Go)"]:::goService
+    end
+
+    %% Database Layer
+    subgraph VM_Data [VM: Data 172.20.0.40]
+        AuthDB[("Auth DB")]:::db
+        AppointDB[("Appoint DB")]:::db
+        PatientDB[("Patient DB")]:::db
+        DoctorDB[("Doctor DB")]:::db
+    end
+
+    %% --- CONNECTIONS ---
+
+    %% Client Ingress
+    Wearables -->|TCP/MQTT| Nginx
+    UI -->|HTTP / REST| Nginx
+
+    %% IoT / Streaming Flow
+    Nginx -->|Route IoT Traffic| Ingest
+    Ingest -->|Produce Raw Data| KafkaBroker
+    KafkaBroker -.->|Consume Raw Stream| KafkaStreams
+    KafkaStreams -->|Produce Anomaly Event| KafkaBroker
+    KafkaBroker -.->|Consume Alert Event| AlertEngine
+    AlertEngine -->|Push Alert WS/SSE| Nginx
+    Nginx -->|Real-time UI Update| UI
+
+    %% Backend API Routing
+    Nginx -->|Route API Calls| Auth
+    Nginx -->|Route API Calls| Appoint
+    Nginx -->|Route API Calls| Patient
+    Nginx -->|Route API Calls| Doctor
+
+    %% Backend DB Connections (Strict Isolation)
+    Auth --> AuthDB
+    Appoint --> AppointDB
+    Patient --> PatientDB
+    Doctor --> DoctorDB
+
+    %% Inter-service & Event Driven Flow
+    Appoint -.->|Validate IDs Sync| Patient
+    Appoint -.->|Validate IDs Sync| Doctor
+    Appoint -->|Produce Appt Event Async| KafkaBroker
+    KafkaBroker -.->|Consume Appt Event| Notif
+    Notif -->|Send Email/SMS| External
+
+    %% Security Connections
+    Auth -.->|Fetch Credentials| Vault
+    Appoint -.->|Fetch Credentials| Vault
+    Patient -.->|Fetch Credentials| Vault
+    Doctor -.->|Fetch Credentials| Vault
+```
+
+
 ![alt text](/docs/image.png)
 
 ### Core Architectural Principles
