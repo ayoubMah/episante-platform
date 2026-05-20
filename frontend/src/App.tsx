@@ -5,6 +5,7 @@ import type { JSX } from "react/jsx-dev-runtime";
 import HomePage from "./pages/HomePage";
 import DoctorList from "./pages/doctors/DoctorList";
 import PatientList from "./pages/patients/PatientList";
+import AlertsPage from "./pages/alerts/AlertsPage";
 import AppointmentDetails from "./pages/appointments/AppointmentDetails";
 import AppointmentList from "./pages/appointments/AppointmentList";
 import AppointmentForm from "./pages/appointments/AppointmentForm";
@@ -92,6 +93,13 @@ function App() {
                 <Route path="/appointments/:id/details" element={
                    <RoleRoute allowedRoles={['ADMIN', 'DOCTOR', 'PATIENT']}>
                     <AppointmentDetails />
+                  </RoleRoute>
+                } />
+
+                {/* --- ALERTS (Doctors & Admin) --- */}
+                <Route path="/alerts" element={
+                  <RoleRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                    <AlertsPage />
                   </RoleRoute>
                 } />
 

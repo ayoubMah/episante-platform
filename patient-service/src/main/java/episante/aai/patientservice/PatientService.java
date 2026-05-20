@@ -11,6 +11,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 
+import com.upec.episantecommon.enums.Gender;
+
 @Service
 @Transactional(readOnly = true)
 public class PatientService {
@@ -28,6 +30,10 @@ public class PatientService {
     public Patient findById(UUID id) {
         return repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Patient not found: " + id));
+    }
+
+    public List<Patient> findAllByIds(List<UUID> ids) {
+        return repo.findAllById(ids);
     }
 
     @Transactional
@@ -52,6 +58,12 @@ public class PatientService {
             }
         }
 
+        if (req.getGender() != null) {
+            p.setGender(Gender.valueOf(req.getGender()));
+        }
+
+        p.setDoctorId(req.getDoctorId());
+
         return repo.save(p);
     }
 
@@ -59,15 +71,20 @@ public class PatientService {
     public Patient update(UUID id, PatientProfileRequest req) {
         Patient existing = findById(id);
 
-        // We generally use DTOs for updates too.
-        // For now, reusing ProfileRequest is okay, but usually, we have UpdatePatientRequest.
         existing.setFirstName(req.getFirstName());
         existing.setLastName(req.getLastName());
+        existing.setEmail(req.getEmail());
         existing.setPhone(req.getPhone());
 
         if (req.getDob() != null) {
             existing.setDob(LocalDate.parse(req.getDob()));
         }
+
+        if (req.getGender() != null) {
+            existing.setGender(Gender.valueOf(req.getGender()));
+        }
+
+        existing.setDoctorId(req.getDoctorId());
 
         return repo.save(existing);
     }

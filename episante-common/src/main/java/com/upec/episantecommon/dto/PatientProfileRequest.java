@@ -12,6 +12,7 @@ public class PatientProfileRequest {
     private String email;
     private String dob;
     private String phone;
+    private String gender;
     private UUID doctorId;
 }
 

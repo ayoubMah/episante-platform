@@ -53,6 +53,7 @@ public class PatientController {
         dto.setPhone(p.getPhone());
         dto.setDob(p.getDob());
         dto.setGender(p.getGender());
+        dto.setDoctorId(p.getDoctorId());
 
         return dto;
     }

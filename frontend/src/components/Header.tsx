@@ -38,6 +38,13 @@ export default function Header() {
                 Appointments
               </Link>
 
+              {/* Alerts Link (Doctors & Admin) */}
+              {(userRole === 'DOCTOR' || userRole === 'ADMIN') && (
+                <Link to="/alerts" className="text-gray-600 hover:text-blue-600 font-medium">
+                  Alerts
+                </Link>
+              )}
+
               {/* Logout Button */}
               <button
                 onClick={() => { logout(); navigate('/login'); }}

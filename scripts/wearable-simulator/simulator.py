@@ -97,9 +97,13 @@ def get_baseline(age: int, gender: str):
 def generate_metric(patient: PatientProfile, anomaly_rate: float) -> dict:
     hr, bp_sys, bp_dia, spo2, temp = get_baseline(patient.age, patient.gender)
 
-    trigger_anomaly = np.random.random() < anomaly_rate
+    hr_val = int(np.clip(np.random.normal(hr[0], hr[1]), 40, 220))
+    bp_sys_val = int(np.clip(np.random.normal(bp_sys[0], bp_sys[1]), 60, 250))
+    bp_dia_val = int(np.clip(np.random.normal(bp_dia[0], bp_dia[1]), 30, 150))
+    spo2_val = int(np.clip(np.random.normal(spo2[0], spo2[1]), 70, 100))
+    temp_val = round(np.clip(np.random.normal(temp[0], temp[1]), 34.0, 42.0), 1)
 
-    if trigger_anomaly:
+    if np.random.random() < anomaly_rate:
         anomaly_type = np.random.choice(["hr", "bp", "spo2", "temp"])
         if anomaly_type == "hr":
             hr_val = int(np.random.normal(hr[0] + 50, hr[1]))
@@ -110,12 +114,6 @@ def generate_metric(patient: PatientProfile, anomaly_rate: float) -> dict:
             spo2_val = int(np.clip(np.random.normal(spo2[0] - 10, spo2[1]), 70, 100))
         elif anomaly_type == "temp":
             temp_val = round(np.random.normal(temp[0] + 2.0, 0.5), 1)
-    else:
-        hr_val = int(np.clip(np.random.normal(hr[0], hr[1]), 40, 220))
-        bp_sys_val = int(np.clip(np.random.normal(bp_sys[0], bp_sys[1]), 60, 250))
-        bp_dia_val = int(np.clip(np.random.normal(bp_dia[0], bp_dia[1]), 30, 150))
-        spo2_val = int(np.clip(np.random.normal(spo2[0], spo2[1]), 70, 100))
-        temp_val = round(np.clip(np.random.normal(temp[0], temp[1]), 34.0, 42.0), 1)
 
     return {
         "patientId": patient.patient_id,

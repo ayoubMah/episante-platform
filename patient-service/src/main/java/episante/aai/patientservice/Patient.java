@@ -40,6 +40,9 @@ public class Patient {
     @Column(length = 20)
     private Gender gender;
 
+    @Column(name = "doctor_id")
+    private UUID doctorId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;

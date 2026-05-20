@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,26 +22,25 @@ type AppointmentCreatedEvent struct {
 	Status        string `json:"status"`
 }
 
+type HealthAlertEvent struct {
+	AlertID      string  `json:"alertId"`
+	PatientID    string  `json:"patientId"`
+	DoctorID     string  `json:"doctorId"`
+	AlertType    string  `json:"alertType"`
+	Severity     string  `json:"severity"`
+	Message      string  `json:"message"`
+	ActualValue  float64 `json:"actualValue"`
+	ThresholdUsed float64 `json:"thresholdUsed"`
+	MetricName   string  `json:"metricName"`
+	Timestamp    string  `json:"timestamp"`
+}
+
 func main() {
 	brokerAddress := os.Getenv("KAFKA_BROKER")
 	if brokerAddress == "" {
 		brokerAddress = "localhost:9094"
 	}
 
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{brokerAddress},
-		GroupID:  "notification-group-go",
-		Topic:    "appointment.created",
-		MinBytes: 1,
-		MaxBytes: 10e6,
-		StartOffset: kafka.FirstOffset,
-		MaxWait:  1 * time.Second,
-	})
-
-	// Graceful shutdown — listen for SIGINT (Ctrl+C) or SIGTERM (Docker stop)
-	// When the OS sends a stop signal, we cleanly close the Kafka reader
-	// This lets Kafka rebalance the consumer group immediately
-	// instead of waiting for a session timeout (can be 30+ seconds)
 	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -51,48 +51,120 @@ func main() {
 		cancel()
 	}()
 
-	log.Println("🟢 [NOTIFICATION SERVICE] Started. Listening on topic: appointment.created")
+	log.Println("🟢 [NOTIFICATION SERVICE] Started.")
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		consumeAppointments(ctx, brokerAddress)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		consumeHealthAlerts(ctx, brokerAddress, "health.alerts.patient", "patient")
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		consumeHealthAlerts(ctx, brokerAddress, "health.alerts.doctor", "doctor")
+	}()
+
+	wg.Wait()
+	log.Println("✅ All consumers closed. Goodbye.")
+}
+
+func consumeAppointments(ctx context.Context, brokerAddress string) {
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     []string{brokerAddress},
+		GroupID:     "notification-group-go",
+		Topic:       "appointment.created",
+		MinBytes:    1,
+		MaxBytes:    10e6,
+		StartOffset: kafka.FirstOffset,
+		MaxWait:     1 * time.Second,
+	})
+
+	log.Println("   Listening on topic: appointment.created")
 
 	for {
 		message, err := reader.ReadMessage(ctx)
 		if err != nil {
-			// context.Canceled means we triggered shutdown intentionally — not an error
 			if ctx.Err() != nil {
-				log.Println("🛑 Context cancelled. Exiting consumer loop.")
+				log.Println("   [appointment.created] Context cancelled.")
 				break
 			}
-			// Any other error is transient — log and continue, never crash
-			log.Printf("❌ Error reading message: %v", err)
+			log.Printf("❌ [appointment.created] Error: %v", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
 
 		var event AppointmentCreatedEvent
 		if err := json.Unmarshal(message.Value, &event); err != nil {
-			// Bad message — log it with full payload for debugging, skip it
-			// Never block the consumer for one malformed message
-			log.Printf("⚠️ Failed to parse JSON at partition=%d offset=%d: %v | payload=%s",
+			log.Printf("⚠️ [appointment.created] Bad JSON at partition=%d offset=%d: %v | %s",
 				message.Partition, message.Offset, err, string(message.Value))
 			continue
 		}
 
-		log.Printf("🔔 Event received | partition=%d offset=%d", message.Partition, message.Offset)
-		log.Printf("   patientId=%s doctorId=%s startTime=%s", event.PatientID, event.DoctorID, event.StartTime)
+		log.Printf("🔔 [appointment.created] patient=%s doctor=%s start=%s",
+			event.PatientID, event.DoctorID, event.StartTime)
 
-		// Business logic isolated in its own function
-		// When you add real email sending, it goes here — not inline in the loop
-		handleNotification(event)
+		log.Printf("📧 [MOCK] Sending email to patient=%s for appointment=%s",
+			event.PatientID, event.AppointmentID)
 	}
 
-	// Now reachable — called after clean shutdown
 	if err := reader.Close(); err != nil {
-		log.Printf("⚠️ Error closing Kafka reader: %v", err)
+		log.Printf("⚠️ [appointment.created] Error closing reader: %v", err)
 	}
-	log.Println("✅ Kafka reader closed. Goodbye.")
 }
 
-func handleNotification(event AppointmentCreatedEvent) {
-	// Today: mock. Tomorrow: call SendGrid, Twilio, etc.
-	log.Printf("📧 [MOCK] Sending email to patient=%s for appointment=%s",
-		event.PatientID, event.AppointmentID)
+func consumeHealthAlerts(ctx context.Context, brokerAddress string, topic string, audience string) {
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     []string{brokerAddress},
+		GroupID:     "notification-group-go",
+		Topic:       topic,
+		MinBytes:    1,
+		MaxBytes:    10e6,
+		StartOffset: kafka.FirstOffset,
+		MaxWait:     1 * time.Second,
+	})
+
+	log.Printf("   Listening on topic: %s (audience=%s)", topic, audience)
+
+	for {
+		message, err := reader.ReadMessage(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
+				log.Printf("   [%s] Context cancelled.", topic)
+				break
+			}
+			log.Printf("❌ [%s] Error: %v", topic, err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		var event HealthAlertEvent
+		if err := json.Unmarshal(message.Value, &event); err != nil {
+			log.Printf("⚠️ [%s] Bad JSON at partition=%d offset=%d: %v | %s",
+				topic, message.Partition, message.Offset, err, string(message.Value))
+			continue
+		}
+
+		log.Printf("🚨 [%s] %s | patient=%s | %s (value=%.1f, threshold=%.1f)",
+			topic, event.Severity, event.PatientID, event.Message, event.ActualValue, event.ThresholdUsed)
+
+		if audience == "patient" {
+			log.Printf("📱 [MOCK SMS] Patient %s: %s", event.PatientID, event.Message)
+		} else {
+			log.Printf("📧 [MOCK EMAIL] Doctor %s: Alert for patient %s - %s",
+				event.DoctorID, event.PatientID, event.Message)
+		}
+	}
+
+	if err := reader.Close(); err != nil {
+		log.Printf("⚠️ [%s] Error closing reader: %v", topic, err)
+	}
 }

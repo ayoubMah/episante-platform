@@ -112,6 +112,28 @@ export const appointmentApi = {
   delete: async (id: string) => await api.delete(`/appointments/${id}`),
 };
 
+export interface HealthAlertEvent {
+  alertId: string;
+  patientId: string;
+  doctorId: string;
+  alertType: string;
+  severity: "INFO" | "WARNING" | "CRITICAL";
+  message: string;
+  actualValue: number;
+  thresholdUsed: number;
+  metricName: string;
+  timestamp: string;
+}
+
+export const alertApi = {
+  getAll: async () =>
+    (await api.get<HealthAlertEvent[]>("/alerts")).data,
+  getDoctorAlerts: async (doctorId: string) =>
+    (await api.get<HealthAlertEvent[]>(`/alerts/doctor/${doctorId}`)).data,
+  getPatientAlerts: async (patientId: string) =>
+    (await api.get<HealthAlertEvent[]>(`/alerts/patient/${patientId}`)).data,
+};
+
 export const authApi = {
   register: async (data: RegisterRequest) => {
     // We don't save the token here usually, just return success
