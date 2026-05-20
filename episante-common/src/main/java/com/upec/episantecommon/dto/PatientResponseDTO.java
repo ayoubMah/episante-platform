@@ -16,4 +16,5 @@ public class PatientResponseDTO {
     private String phone;
     private LocalDate dob;
     private Gender gender;
+    private UUID doctorId;
 }
