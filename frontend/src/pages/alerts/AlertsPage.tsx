@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { alertApi } from "../../lib/api";
+import { useEffect, useState, useRef } from "react";
+import { alertApi, patientApi } from "../../lib/api";
 import type { HealthAlertEvent } from "../../lib/api";
 
 const severityColors: Record<string, string> = {
@@ -12,16 +12,43 @@ const severityOrder = ["CRITICAL", "WARNING", "INFO"];
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<HealthAlertEvent[]>([]);
+  const [patientNames, setPatientNames] = useState<Record<string, string>>({});
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const pendingIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
         const data = await alertApi.getAll();
         setAlerts(data);
+        setLastUpdated(new Date());
+
+        const newIds = data
+          .map((a) => a.patientId)
+          .filter((id) => !pendingIds.current.has(id));
+
+        newIds.forEach((id) => {
+          pendingIds.current.add(id);
+          patientApi
+            .getOne(id)
+            .then((p) =>
+              setPatientNames((prev) => ({
+                ...prev,
+                [id]: `${p.firstName} ${p.lastName}`,
+              }))
+            )
+            .catch(() =>
+              setPatientNames((prev) => ({
+                ...prev,
+                [id]: id.slice(0, 8) + "…",
+              }))
+            );
+        });
       } catch {
         // silent
       }
     };
+
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 5000);
     return () => clearInterval(interval);
@@ -32,16 +59,44 @@ export default function AlertsPage() {
       severityOrder.indexOf(a.severity) - severityOrder.indexOf(b.severity)
   );
 
+  const counts = {
+    CRITICAL: alerts.filter((a) => a.severity === "CRITICAL").length,
+    WARNING: alerts.filter((a) => a.severity === "WARNING").length,
+    INFO: alerts.filter((a) => a.severity === "INFO").length,
+  };
+
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Health Alerts
-        {alerts.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-gray-500">
-            ({alerts.length} active)
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Health Alerts</h1>
+        {lastUpdated && (
+          <span className="text-xs text-gray-400 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" />
+            Live · {lastUpdated.toLocaleTimeString()}
           </span>
         )}
-      </h1>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+          <div className="text-3xl font-bold text-red-700">{counts.CRITICAL}</div>
+          <div className="text-xs text-red-600 font-semibold uppercase tracking-wide mt-1">
+            Critical
+          </div>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+          <div className="text-3xl font-bold text-yellow-700">{counts.WARNING}</div>
+          <div className="text-xs text-yellow-600 font-semibold uppercase tracking-wide mt-1">
+            Warning
+          </div>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+          <div className="text-3xl font-bold text-blue-700">{counts.INFO}</div>
+          <div className="text-xs text-blue-600 font-semibold uppercase tracking-wide mt-1">
+            Info
+          </div>
+        </div>
+      </div>
 
       {sorted.length === 0 ? (
         <p className="text-gray-500 text-center py-12">
@@ -55,10 +110,15 @@ export default function AlertsPage() {
               className={`border rounded-lg p-4 ${severityColors[a.severity] || severityColors.INFO}`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold text-sm uppercase">
-                  {a.severity}
-                </span>
-                <span className="text-xs opacity-75">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm uppercase">
+                    {a.severity}
+                  </span>
+                  <span className="text-sm font-medium opacity-70">
+                    {patientNames[a.patientId] ?? "…"}
+                  </span>
+                </div>
+                <span className="text-xs opacity-60">
                   {new Date(a.timestamp).toLocaleString()}
                 </span>
               </div>

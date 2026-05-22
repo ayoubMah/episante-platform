@@ -332,6 +332,9 @@
         - kafka
       environment:
         - KAFKA_BROKER=kafka:9092
+        - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+        - FROM_EMAIL=${FROM_EMAIL}
+        - DEMO_DOCTOR_EMAIL=${DEMO_DOCTOR_EMAIL}
       networks:
         - episante_net
 
