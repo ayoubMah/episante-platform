@@ -1,0 +1,8 @@
+# Format: URL | YEAR | STATUS (pending/done/error)
+# Add CSV data source URLs here, one per line.
+# The pipeline processes the smallest pending year first.
+#
+# Example:
+# https://data.example.com/hospital-data-2020.csv | 2020 | pending
+# https://data.example.com/hospital-data-2021.csv | 2021 | pending
+# https://data.example.com/hospital-data-2022.csv | 2022 | pending

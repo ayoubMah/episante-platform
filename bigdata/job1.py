@@ -1,37 +1,35 @@
+"""
+Job 1 — Download CSV data from external sources.
+
+Downloads the smallest pending year from the URL config file.
+Stores raw CSV in the local filesystem for Bronze ingestion.
+"""
+
+import os
 import sys
-import requests
+import time
 from pathlib import Path
 
-# -------------------------
-# Configuration générale
-# -------------------------
+import requests
 
-PROXY_HOST = "192.168.1.60"
-PROXY_PORT = 3128
+# ── Config (env-configurable) ────────────────────────────────────────────────
+RAW_DIR    = Path(os.environ.get("RAW_CSV_DIR", "/opt/spark-jobs/data/raw_csv"))
+URLS_FILE  = Path(os.environ.get("URLS_FILE", "/opt/spark-jobs/config/urls_to_process.txt"))
+PROXY_HOST = os.environ.get("PROXY_HOST", "")
+PROXY_PORT = os.environ.get("PROXY_PORT", "3128")
 
-BASE_DIR = Path("/Data_Sirius")
-RAW_DIR = BASE_DIR / "raw_csv"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
-URLS_FILE = Path("/home/spark/spark_jobs/config/urls_to_process.txt")
+PROXIES = (
+    {"http": f"http://{PROXY_HOST}:{PROXY_PORT}", "https": f"http://{PROXY_HOST}:{PROXY_PORT}"}
+    if PROXY_HOST else {}
+)
 
-PROXIES = {
-    "http": f"http://{PROXY_HOST}:{PROXY_PORT}",
-    "https": f"http://{PROXY_HOST}:{PROXY_PORT}",
-}
 
-# -------------------------
-# Utils lecture / choix URL
-# -------------------------
 def get_smallest_pending_url(filepath: Path):
-    """
-    Retourne (url, year) avec la plus petite année en status 'pending'.
-    Si aucune URL pending, retourne (None, None).
-    """
     pending_entries = []
-
     if not filepath.exists():
-        raise FileNotFoundError(f"Fichier URLs introuvable : {filepath}")
+        raise FileNotFoundError(f"URL file not found: {filepath}")
 
     with filepath.open("r") as f:
         for line in f:
@@ -40,113 +38,71 @@ def get_smallest_pending_url(filepath: Path):
                 continue
             parts = line.split("|")
             if len(parts) != 3:
-                print(f" Ligne ignorée (format invalide) : {line}")
                 continue
-
-            url, year_str, status = parts
-            year_str = year_str.strip()
-            status = status.strip().lower()
-
-            if status == "pending":
+            url, year_str, status = [p.strip() for p in parts]
+            if status.lower() == "pending":
                 try:
-                    year = int(year_str)
-                    pending_entries.append((year, url))
+                    pending_entries.append((int(year_str), url))
                 except ValueError:
-                    print(f" Année invalide ignorée : {year_str} (ligne : {line})")
+                    continue
 
     if not pending_entries:
         return None, None
 
-    # Tri par année et prise de la plus petite
     pending_entries.sort(key=lambda x: x[0])
-    smallest_year, url = pending_entries[0]
-    return url, str(smallest_year)
+    return pending_entries[0][1], str(pending_entries[0][0])
 
-# -------------------------
-# Téléchargement fichier
-# -------------------------
 
 def download_file(url: str, dest_path: Path, chunk_size: int = 1024 * 1024) -> int:
-    """
-    Télécharge un fichier en streaming via proxy et l'écrit sur disque,
-    en affichant une progression (MB téléchargés / MB totaux).
-
-    Retourne la taille finale du fichier en bytes.
-    """
-    print(f" Téléchargement depuis : {url}")
-    print(f" Destination : {dest_path}")
+    print(f"  Downloading: {url}")
+    print(f"  Destination: {dest_path}")
     with requests.get(url, stream=True, proxies=PROXIES, timeout=600) as r:
         r.raise_for_status()
-
-        total_size = r.headers.get("Content-Length")
-        total_size = int(total_size) if total_size is not None else None
+        total_size = int(r.headers.get("Content-Length", 0)) or None
         downloaded = 0
-
-        # Création du fichier en écriture binaire
         with dest_path.open("wb") as f:
             for chunk in r.iter_content(chunk_size=chunk_size):
                 if not chunk:
                     continue
                 f.write(chunk)
                 downloaded += len(chunk)
-
                 if total_size:
                     pct = downloaded * 100 / total_size
-                    print(f"   Progression : {downloaded/1024/1024:.2f} MB "
-                          f"/ {total_size/1024/1024:.2f} MB ({pct:.1f}%)",
-                          end="\r")
-                else:
-                    print(f"   Progression : {downloaded/1024/1024:.2f} MB téléchargés",
-                          end="\r")
-
-    print()  # retour à la ligne
-    print(f" Téléchargement terminé : {dest_path} ({downloaded} bytes)")
+                    print(f"  {downloaded / 1024 / 1024:.1f} MB / {total_size / 1024 / 1024:.1f} MB ({pct:.0f}%)", end="\r")
+    print()
     return downloaded
 
-# -------------------------
-# Main
-# -------------------------
 
 def main():
-    print("===== Job 1 - Téléchargement CSV SPARCS =====")
+    print("=" * 50)
+    print("  Job 1 — Download CSV")
+    print("=" * 50)
 
     try:
         url, year = get_smallest_pending_url(URLS_FILE)
     except Exception as e:
-        print(f" Erreur lecture fichier URLs : {e}")
+        print(f"  Error: {e}")
         sys.exit(1)
 
     if not url or not year:
-        print(" Aucun fichier 'pending' à traiter. Rien à faire.")
+        print("  No pending URLs to process.")
         sys.exit(0)
 
-    print(f" Fichier à traiter : année {year}")
-    print(f" URL : {url}")
-
+    print(f"  Year: {year}")
     dest_file = RAW_DIR / f"SPARCS_{year}.csv"
 
-    
     if dest_file.exists():
-        print(f"ℹ Fichier existe déjà : {dest_file}")
-        print("   (Tu peux décider de le supprimer ou de sauter le téléchargement)")
-
+        print(f"  File already exists: {dest_file}")
 
     try:
         size = download_file(url, dest_file)
-
-
-        if size < 10 * 1024 * 1024: 
-            print(f" ATTENTION : fichier {dest_file} très petit ({size} bytes). "
-                  f"Vérifier l'URL ou le proxy.")
-
-        print(" Job 1 terminé avec succès.")
-        print(f"   Fichier téléchargé : {dest_file}")
-
- 
-
+        if size < 10 * 1024 * 1024:
+            print(f"  Warning: file is small ({size} bytes)")
+        print(f"  Done: {dest_file} ({size:,} bytes)")
     except Exception as e:
-        print(f" Erreur pendant le téléchargement : {e}")
+        print(f"  Download failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

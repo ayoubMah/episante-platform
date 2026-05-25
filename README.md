@@ -141,7 +141,7 @@ The full platform adds a Firewall perimeter, a Proxy VM for external exposure, a
 | **Backend (Transactional)** | Java 21, Spring Boot 3, Spring Security, Spring Cloud OpenFeign |
 | **Backend (Async/IoT)**     | Go (Golang), segmentio/kafka-go                                 |
 | **Data & Messaging**        | PostgreSQL 16, Apache Kafka (KRaft Mode), Flyway                |
-| **Big Data / Telemetry**    | Apache Spark, MQTT (Planned Phase 2)                            |
+| **Big Data / Telemetry**    | Apache Spark, HDFS, MongoDB, PostgreSQL DW, Airflow             |
 | **Security**                | HashiCorp Vault (KV Secrets Engine), JWT                        |
 | **Frontend**                | React, Vite, TypeScript, TailwindCSS, Axios                     |
 | **Infrastructure**          | Docker Compose, Nginx (API Gateway)                             |

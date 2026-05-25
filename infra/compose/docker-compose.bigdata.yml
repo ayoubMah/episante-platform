@@ -1,0 +1,101 @@
+services:
+
+  # --- HDFS NameNode ---
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: episante-namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      CLUSTER_NAME: episante
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      CORE_CONF_hadoop_http_staticuser_user: root
+      HDFS_CONF_dfs_replication: 1
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+    networks:
+      - episante_bigdata
+
+  # --- HDFS DataNode ---
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: episante-datanode
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HDFS_CONF_dfs_replication: 1
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+    depends_on:
+      - namenode
+    networks:
+      - episante_bigdata
+
+  # --- MongoDB (Silver Layer) ---
+  mongodb:
+    image: mongo:7.0
+    container_name: episante-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - episante_bigdata
+
+  # --- PostgreSQL Data Warehouse (Gold Layer) ---
+  postgres-dw:
+    image: postgres:16
+    container_name: episante-postgres-dw
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: episante_gold
+      POSTGRES_USER: spark
+      POSTGRES_PASSWORD: ${DW_PASSWORD:-spark_pass}
+    volumes:
+      - postgres_dw_data:/var/lib/postgresql/data
+      - ./bigdata-init/gold-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - episante_bigdata
+
+  # --- Apache Spark Master ---
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: episante-spark-master
+    ports:
+      - "8088:8080"
+      - "7077:7077"
+    environment:
+      SPARK_MODE: master
+      SPARK_MASTER_HOST: spark-master
+    volumes:
+      - ../../bigdata:/opt/spark-jobs:ro
+      - ../../bigdata/config:/opt/spark-jobs/config
+      - spark_state:/opt/spark-jobs/state
+    networks:
+      - episante_bigdata
+
+  # --- Apache Spark Worker ---
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: episante-spark-worker
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 4g
+      SPARK_WORKER_CORES: 2
+    depends_on:
+      - spark-master
+    networks:
+      - episante_bigdata
+
+volumes:
+  namenode_data:
+  datanode_data:
+  mongodb_data:
+  postgres_dw_data:
+  spark_state:
+
+networks:
+  episante_bigdata:
+    driver: bridge

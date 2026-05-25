@@ -52,6 +52,9 @@ cp infra/env/postgres.env.example infra/compose/.env
 ```bash
 cd infra/compose
 docker-compose up -d --build
+
+# Big data stack (separate compose)
+docker-compose -f docker-compose.bigdata.yml up -d
 ```
 
 ### 5. Verify
@@ -64,6 +67,10 @@ docker-compose up -d --build
 | Prometheus | http://localhost:9090/targets | All targets UP |
 | Grafana | http://localhost:3001 | Dashboard |
 | Jenkins | http://localhost:8080 | Setup wizard |
+| HDFS NameNode | http://localhost:9870 | HDFS web UI |
+| Spark Master | http://localhost:8088 | Spark web UI |
+| MongoDB | localhost:27017 | Silver layer |
+| PostgreSQL DW | localhost:5433 | Gold layer (user: spark) |
 
 ---
 

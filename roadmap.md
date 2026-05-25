@@ -88,11 +88,11 @@
 
 ## Phase 7 — Big Data Analytics Pipeline
 
-- [ ] PySpark scraping jobs
-- [ ] Hadoop HDFS (Bronze layer)
-- [ ] MongoDB Silver layer
-- [ ] Postgres DW Gold layer
-- [ ] ETL: Spark → Bronze → Silver → Gold
+- [x] PySpark scraping jobs (job1 — download CSV)
+- [x] Hadoop HDFS (Bronze layer — job2, partitioned Parquet)
+- [x] MongoDB Silver layer (job3, incremental with state management)
+- [x] Postgres DW Gold layer (job4, KPI aggregation)
+- [x] ETL: Spark → Bronze → Silver → Gold (Airflow DAG)
 - [ ] Power BI dashboards (doctors, admin analytics)
 
 ---
@@ -124,7 +124,7 @@
 - [x] Full microservices platform deployed across multiple VMs
 - [x] CRUD medical system functional
 - [x] Real-time wearable alerts operational
-- [ ] Big data analytics pipeline complete
+- [x] Big data analytics pipeline complete
 - [x] Secure secret management implemented
 - [x] CI/CD automation working
 - [x] Professional dev/ops architecture documented
