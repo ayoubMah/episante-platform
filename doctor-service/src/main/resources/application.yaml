@@ -46,10 +46,14 @@ application:
   security:
     jwt-secret: ${jwt-secret}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
 logging:
   level:
     root: INFO
     org.springframework: INFO
     org.hibernate.SQL: DEBUG
-
-

@@ -72,6 +72,12 @@ app:
     topics:
       appointment-created: appointment.created
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
 logging:
   level:
     root: INFO

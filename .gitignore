@@ -42,5 +42,9 @@ Desktop.ini
 docker-data/
 tmp/
 
+# TLS certificates (generated locally)
+gateway/certs/*.key
+gateway/certs/*.crt
+
 # Spring Boot HELP.md (auto-generated)
 **/HELP.md

@@ -38,7 +38,7 @@
 - [x] Local Key Vault setup (HashiCorp Vault dev mode)
 - [x] Local Kafka cluster (single-node)
 - [x] Local Kafka Streaming (reading dummy data)
-- [ ] Local monitoring (optional: Prometheus + Grafana)
+- [x] Local monitoring (Prometheus + Grafana)
 
 ---
 
@@ -61,7 +61,7 @@
   - [x] Kafka credentials
   - [x] JWT secret
 - [x] Connect Spring Boot to Vault
-- [ ] Secure communication (HTTPS / TLS)
+- [x] Secure communication (HTTPS / TLS)
 
 ---
 

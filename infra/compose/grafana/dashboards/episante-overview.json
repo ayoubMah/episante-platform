@@ -1,0 +1,135 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "episante-overview",
+    "title": "EpiSante — Microservices Overview",
+    "tags": ["episante", "spring-boot"],
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 1,
+    "refresh": "10s",
+    "time": { "from": "now-15m", "to": "now" },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(up, job)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": { "selected": true, "text": "All", "value": "$__all" }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Status (Up/Down)",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "up{job=~\"$service\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } }, "type": "value" }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "HTTP Request Rate (req/s)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=~\"$service\"}[1m])",
+            "legendFormat": "{{job}} {{uri}} {{method}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "HTTP Response Time (p95)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m]))",
+            "legendFormat": "{{job}} p95"
+          }
+        ],
+        "fieldConfig": { "defaults": { "unit": "s" } }
+      },
+      {
+        "id": 4,
+        "title": "JVM Heap Memory Used",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=~\"$service\", area=\"heap\"}",
+            "legendFormat": "{{job}} {{id}}"
+          }
+        ],
+        "fieldConfig": { "defaults": { "unit": "bytes" } }
+      },
+      {
+        "id": 5,
+        "title": "JVM Threads",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "jvm_threads_live_threads{job=~\"$service\"}",
+            "legendFormat": "{{job}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "HTTP Error Rate (4xx + 5xx)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count{job=~\"$service\", status=~\"4..|5..\"}[1m])",
+            "legendFormat": "{{job}} {{status}} {{uri}}"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "DB Connection Pool",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active{job=~\"$service\"}",
+            "legendFormat": "{{job}} active"
+          },
+          {
+            "expr": "hikaricp_connections_idle{job=~\"$service\"}",
+            "legendFormat": "{{job}} idle"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

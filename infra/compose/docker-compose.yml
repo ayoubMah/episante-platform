@@ -4,9 +4,11 @@
     gateway:
       image: nginx:alpine
       ports:
-        - "8089:80"  # The ONLY port exposed to your machine!
+        - "8089:80"
+        - "8443:443"
       volumes:
         - ../../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+        - ../../gateway/certs:/etc/nginx/certs:ro
       depends_on:
         - frontend
         - auth-service
@@ -96,9 +98,12 @@
       image: grafana/grafana:10.3.3
       container_name: episante-grafana
       ports:
-        - "3001:3000" # Mapped to 3001 so it doesn't conflict with React
+        - "3001:3000"
       environment:
         - GF_SECURITY_ADMIN_PASSWORD=admin
+      volumes:
+        - ./grafana/provisioning:/etc/grafana/provisioning
+        - ./grafana/dashboards:/var/lib/grafana/dashboards
       depends_on:
         - prometheus
       networks:

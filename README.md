@@ -196,13 +196,21 @@ cd infra/compose
 docker-compose up -d --build
 ```
 
-### 4. Access the Platform
+### 4. Generate TLS Certificates (first time only)
 
-- **Web Portal (Frontend)**: `http://localhost:5173`
+```bash
+cd gateway
+sh generate-certs.sh
+```
 
-- **API Gateway (Backend Entrypoint)**: `http://localhost:8089/api/`
+### 5. Access the Platform
 
+- **Web Portal (Frontend)**: `https://localhost:8443`
+- **API Gateway (HTTP redirect)**: `http://localhost:8089` → redirects to HTTPS
+- **API Gateway (HTTPS)**: `https://localhost:8443/api/`
 - **HashiCorp Vault UI**: `http://localhost:8200` (Token: set via `VAULT_DEV_ROOT_TOKEN_ID` env var)
+- **Prometheus**: `http://localhost:9090`
+- **Grafana**: `http://localhost:3001` (admin / admin)
 
 
 ## Service Inventory
