@@ -328,6 +328,21 @@
       networks:
         - episante_net
 
+    # --- Jenkins (CI/CD) ---
+    jenkins:
+      image: jenkins/jenkins:lts-jdk21
+      container_name: episante-jenkins
+      ports:
+        - "8080:8080"
+        - "50000:50000"
+      environment:
+        - VAULT_ADDR=http://vault:8200
+      volumes:
+        - jenkins_home:/var/jenkins_home
+        - /var/run/docker.sock:/var/run/docker.sock
+      networks:
+        - episante_net
+
     notification-service:
       build:
         context: ../../notification-service
@@ -350,6 +365,7 @@
     auth_data:
     kafka_data:
     vault_data:
+    jenkins_home:
 
 
   networks:

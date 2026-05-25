@@ -78,11 +78,11 @@
 
 ## Phase 6 — Smartwatch Simulation
 
-- [ ] Python or Java simulator
-- [ ] Sends heart rate / oxygen / fall detection JSON payloads
-- [ ] Configurable frequency
-- [ ] Stress test scenarios (100+ messages/sec)
-- [ ] Visualization dashboard (optional)
+- [x] Python simulator (`scripts/wearable-simulator/`)
+- [x] Sends heart rate / oxygen / fall detection JSON payloads
+- [x] Configurable frequency (`--interval`)
+- [x] Stress test scenarios (`--stress --workers 20`, 100+ messages/sec)
+- [x] Live terminal dashboard (throughput, latency, per-patient stats)
 
 ---
 
@@ -99,11 +99,11 @@
 
 ## Phase 8 — CI/CD Automation with Jenkins
 
-- [ ] Jenkins pipeline for backend (build → test → push → deploy)
-- [ ] Jenkins pipeline for frontend
-- [ ] Jenkins pipeline for gateway configs
-- [ ] Secrets via Vault (never in Jenkins)
-- [ ] Auto-redeploy on VM after push to GitHub
+- [x] Jenkins pipeline for backend (build → test → push → deploy)
+- [x] Jenkins pipeline for frontend
+- [x] Jenkins pipeline for gateway configs
+- [x] Secrets via Vault (never in Jenkins)
+- [x] Auto-redeploy on VM after push to master
 
 ---
 

@@ -211,6 +211,7 @@ sh generate-certs.sh
 - **HashiCorp Vault UI**: `http://localhost:8200` (Token: set via `VAULT_DEV_ROOT_TOKEN_ID` env var)
 - **Prometheus**: `http://localhost:9090`
 - **Grafana**: `http://localhost:3001` (admin / admin)
+- **Jenkins**: `http://localhost:8080`
 
 
 ## Service Inventory
