@@ -2,7 +2,9 @@ package episante.aai.doctorservice;
 
 import com.upec.episantecommon.dto.DoctorProfileRequest;
 import com.upec.episantecommon.dto.DoctorResponseDTO;
+import com.upec.episantecommon.dto.PageResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +22,11 @@ public class DoctorController {
     }
 
     @GetMapping
-    public List<DoctorResponseDTO> all() {
-        return service.findAll().stream()
-                .map(this::toDTO)
-                .toList();
+    public PageResponse<DoctorResponseDTO> all(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return PageResponse.of(
+                service.findAll(PageRequest.of(page, size)).map(this::toDTO));
     }
 
     @GetMapping("/{id}")

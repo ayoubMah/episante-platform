@@ -3,8 +3,10 @@ package episante.aai.appointmentservice;
 import com.upec.episantecommon.dto.AppointmentDetailsDTO;
 import com.upec.episantecommon.dto.AppointmentResponseDTO;
 import com.upec.episantecommon.dto.CreateAppointmentRequestDTO;
+import com.upec.episantecommon.dto.PageResponse;
 import com.upec.episantecommon.security.SecurityRules;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -49,13 +51,12 @@ public class AppointmentController {
         return service.getAppointmentDetails(id);
     }
 
-    /**
-     * Smart filtering by ROLE
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('PATIENT')")
-    public List<AppointmentResponseDTO> getAll() {
-        return service.getAllForCurrentUser();
+    public PageResponse<AppointmentResponseDTO> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return PageResponse.of(service.getAllForCurrentUser(PageRequest.of(page, size)));
     }
 
     /**

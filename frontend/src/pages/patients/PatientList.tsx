@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { patientApi, type Patient } from '../../lib/api';
+import { patientApi, type Patient, type PageResponse } from '../../lib/api';
+import { useAuth } from '../../lib/AuthContext';
+import Pagination from '../../components/Pagination';
 
 export default function PatientList() {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'ADMIN';
+  const [pageData, setPageData] = useState<PageResponse<Patient> | null>(null);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPatients();
-  }, []);
+  }, [page]);
 
   const loadPatients = async () => {
     setLoading(true);
     try {
-      const data = await patientApi.getAll();
-      setPatients(data);
+      const data = await patientApi.getAll(page);
+      setPageData(data);
     } catch (error) {
       console.error('Failed to load patients:', error);
     } finally {
@@ -35,13 +40,12 @@ export default function PatientList() {
 
   if (loading) return <div className="p-8">Loading...</div>;
 
+  const patients = pageData?.content ?? [];
+
   return (
     <div className="max-w-6xl mx-auto">
-       <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Patients</h1>
-        <Link to="/patients/new" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          Add Patient
-        </Link>
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -63,13 +67,25 @@ export default function PatientList() {
                 <td className="px-6 py-4 text-sm text-gray-500">{p.gender}</td>
                 <td className="px-6 py-4 text-sm text-gray-500">{p.dob}</td>
                 <td className="px-6 py-4 text-right text-sm font-medium space-x-4">
-                  <Link to={`/patients/edit/${p.id}`} className="text-indigo-600 hover:text-indigo-900">Edit</Link>
-                  <button onClick={() => handleDelete(p.id!)} className="text-red-600 hover:text-red-900">Delete</button>
+                  {isAdmin && (
+                    <>
+                      <Link to={`/patients/edit/${p.id}`} className="text-indigo-600 hover:text-indigo-900">Edit</Link>
+                      <button onClick={() => handleDelete(p.id!)} className="text-red-600 hover:text-red-900">Delete</button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {pageData && (
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={pageData.totalElements}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ package episante.aai.doctorservice;
 import com.upec.episantecommon.dto.DoctorProfileRequest;
 import com.upec.episantecommon.exception.DuplicateResourceException;
 import com.upec.episantecommon.exception.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +22,12 @@ public class DoctorService {
         this.repo = repo;
     }
 
-    // LIST / GET (Read Operations)
     public List<Doctor> findAll() {
         return repo.findAll();
+    }
+
+    public Page<Doctor> findAll(Pageable pageable) {
+        return repo.findAll(pageable);
     }
 
     public Doctor findById(UUID id) {

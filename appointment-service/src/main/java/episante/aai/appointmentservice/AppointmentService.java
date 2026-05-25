@@ -9,13 +9,13 @@ import com.upec.episantecommon.security.SecurityUtils;
 import episante.aai.appointmentservice.config.KafkaTopicsProperties;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -52,6 +52,22 @@ public class AppointmentService {
 
         if (SecurityUtils.isPatient()) {
             return repository.findByPatientId(userId).stream().map(this::toResponse).toList();
+        }
+
+        throw new AccessDeniedException("Unauthorized");
+    }
+
+    public Page<AppointmentResponseDTO> getAllForCurrentUser(Pageable pageable) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+
+        if (SecurityUtils.isAdmin()) {
+            return repository.findAll(pageable).map(this::toResponse);
+        }
+        if (SecurityUtils.isDoctor()) {
+            return repository.findByDoctorId(userId, pageable).map(this::toResponse);
+        }
+        if (SecurityUtils.isPatient()) {
+            return repository.findByPatientId(userId, pageable).map(this::toResponse);
         }
 
         throw new AccessDeniedException("Unauthorized");

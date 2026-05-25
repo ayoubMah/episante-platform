@@ -18,6 +18,15 @@ api.interceptors.request.use((config) => {
 
 export default api;
 
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
 export interface Doctor {
   id?: string;
   firstName: string;
@@ -79,7 +88,8 @@ export interface RegisterRequest {
 }
 
 export const doctorApi = {
-  getAll: async () => (await api.get<Doctor[]>("/doctors")).data,
+  getAll: async (page = 0, size = 10) =>
+    (await api.get<PageResponse<Doctor>>("/doctors", { params: { page, size } })).data,
   getOne: async (id: string) => (await api.get<Doctor>(`/doctors/${id}`)).data,
   create: async (data: Doctor) =>
     (await api.post<Doctor>("/doctors", data)).data,
@@ -89,7 +99,8 @@ export const doctorApi = {
 };
 
 export const patientApi = {
-  getAll: async () => (await api.get<Patient[]>("/patients")).data,
+  getAll: async (page = 0, size = 10) =>
+    (await api.get<PageResponse<Patient>>("/patients", { params: { page, size } })).data,
   getOne: async (id: string) =>
     (await api.get<Patient>(`/patients/${id}`)).data,
   create: async (data: Patient) =>
@@ -100,7 +111,8 @@ export const patientApi = {
 };
 
 export const appointmentApi = {
-  getAll: async () => (await api.get<Appointment[]>("/appointments")).data,
+  getAll: async (page = 0, size = 10) =>
+    (await api.get<PageResponse<Appointment>>("/appointments", { params: { page, size } })).data,
   getOne: async (id: string) =>
     (await api.get<Appointment>(`/appointments/${id}`)).data,
   getDetails: async (id: string) =>

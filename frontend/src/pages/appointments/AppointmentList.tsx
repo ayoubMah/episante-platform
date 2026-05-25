@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { appointmentApi, type Appointment } from "../../lib/api";
+import { appointmentApi, type Appointment, type PageResponse } from "../../lib/api";
+import { useAuth } from "../../lib/AuthContext";
+import Pagination from "../../components/Pagination";
 
 export default function AppointmentList() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { userRole } = useAuth();
+  const canCreate = userRole === 'ADMIN' || userRole === 'PATIENT';
+  const [pageData, setPageData] = useState<PageResponse<Appointment> | null>(null);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadAppointments();
-  }, []);
+  }, [page]);
 
   const loadAppointments = async () => {
+    setLoading(true);
     try {
-      const data = await appointmentApi.getAll();
-      setAppointments(data);
+      const data = await appointmentApi.getAll(page);
+      setPageData(data);
     } finally {
       setLoading(false);
     }
@@ -21,16 +27,20 @@ export default function AppointmentList() {
 
   if (loading) return <div>Loading appointments...</div>;
 
+  const appointments = pageData?.content ?? [];
+
   return (
     <div className="max-w-5xl">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
-        <Link
-          to="/appointments/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Create Appointment
-        </Link>
+        {canCreate && (
+          <Link
+            to="/appointments/new"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Create Appointment
+          </Link>
+        )}
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -63,6 +73,14 @@ export default function AppointmentList() {
             ))}
           </tbody>
         </table>
+        {pageData && (
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={pageData.totalElements}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </div>
   );

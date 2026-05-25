@@ -1,5 +1,7 @@
 package episante.aai.appointmentservice;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -14,8 +16,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     // -------------------------------------------------------
 
     List<Appointment> findByDoctorId(UUID doctorId);
+    Page<Appointment> findByDoctorId(UUID doctorId, Pageable pageable);
 
     List<Appointment> findByPatientId(UUID patientId);
+    Page<Appointment> findByPatientId(UUID patientId, Pageable pageable);
 
 
     // -------------------------------------------------------

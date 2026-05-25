@@ -1,9 +1,11 @@
 package episante.aai.patientservice;
 
+import com.upec.episantecommon.dto.PageResponse;
 import com.upec.episantecommon.dto.PatientResponseDTO;
 import com.upec.episantecommon.dto.PatientProfileRequest;
 import com.upec.episantecommon.security.SecurityRules;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +24,11 @@ public class PatientController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
-    public List<PatientResponseDTO> all() {
-        return service.findAll().stream().map(this::toDTO).toList();
+    public PageResponse<PatientResponseDTO> all(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return PageResponse.of(
+                service.findAll(PageRequest.of(page, size)).map(this::toDTO));
     }
 
     @GetMapping("/{id}")
