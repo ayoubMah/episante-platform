@@ -1,6 +1,6 @@
-#  EPISANTE — Project Checklist
+# EpiSante — Project Roadmap
 
-##  Phase 0 — Architecture & Foundations
+## Phase 0 — Architecture & Foundations
 
 - [x] Microservices list & responsibilities
 - [x] VM topology
@@ -17,7 +17,7 @@
 
 ---
 
-##  Phase 1 — Core CRUD (Local Development)
+## Phase 1 — Core CRUD (Local Development)
 
 - [x] Doctor Service CRUD
 - [x] Patient Service CRUD
@@ -30,19 +30,19 @@
 
 ---
 
-##  Phase 2 — Local Infrastructure Simulation
+## Phase 2 — Local Infrastructure Simulation
 
 - [x] Local Nginx reverse proxy
 - [x] Local microservices network (docker-compose networks)
 - [x] Local multi-DB setup (patientdb, doctordb, appointmentdb)
 - [x] Local Key Vault setup (HashiCorp Vault dev mode)
 - [x] Local Kafka cluster (single-node)
-- [x] Local kafka Streaming (reading dummy data)
+- [x] Local Kafka Streaming (reading dummy data)
 - [ ] Local monitoring (optional: Prometheus + Grafana)
 
 ---
 
-##  Phase 3 — Deployment to University VMs
+## Phase 3 — Deployment to University VMs
 
 - [x] Deploy Frontend VM
 - [x] Deploy Backend VM (microservices + docker-compose)
@@ -65,12 +65,12 @@
 
 ---
 
-## Phase 5 — Real-Time Engine (Kafka + Spark)
+## Phase 5 — Real-Time Engine (Kafka + Streams)
 
-- [x] Kafka producer (INGEST service)
-- [x] Kafka consumer (ALERT service)
-- [ ] kafka Streaming reads sensor stream
-- [ ] kafka publishes alerts back to Kafka
+- [x] Kafka producer (Ingest Wearables Service)
+- [x] Kafka consumer (Notification Service)
+- [ ] Kafka Streams reads sensor stream
+- [ ] Kafka Streams publishes alerts back to Kafka
 - [ ] Alerts consumed by Health Alert Engine
 - [x] Doctor UI receives alert notification
 
@@ -112,16 +112,14 @@
 - [ ] Logging (ELK or Loki optional)
 - [ ] Monitoring dashboards
 - [ ] Final documentation:
-  - [ ] Architecture.md
-  - [ ] roadmap.md
-  - [ ] todo.md
-  - [ ] deployment.md
+  - [ ] Architecture docs
+  - [ ] Deployment guide
   - [ ] API documentation
 - [ ] Cleanup & optimization
 
 ---
 
-##  Final Goal
+## Final Goal
 
 - [ ] Full microservices platform deployed across multiple VMs
 - [ ] CRUD medical system functional

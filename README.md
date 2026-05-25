@@ -109,7 +109,7 @@ flowchart TD
     Doctor -.->|Fetch Credentials| Vault
 ```
 
-![Microservices & Event-Driven Architecture](/docs/imageA.png)
+![Microservices & Event-Driven Architecture](/docs/architecture-microservices.png)
 
 ---
 
@@ -117,7 +117,7 @@ flowchart TD
 
 The full platform adds a Firewall perimeter, a Proxy VM for external exposure, and a Big Data cluster (HDFS, Apache Spark, MongoDB) for long-term storage and batch analytics of telemetry data collected from wearables.
 
-![Full Platform Architecture with Big Data Layer](/docs/image.png)
+![Full Platform Architecture with Big Data Layer](/docs/architecture-full-platform.png)
 
 ---
 
@@ -151,18 +151,22 @@ The full platform adds a Firewall perimeter, a Proxy VM for external exposure, a
 
 ```
 episante/
-├── appointment-service/         # Java: Booking management & Kafka Producer
-├── auth-service/                # Java: Identity, JWT generation
-├── doctor-service/              # Java: Doctor profiles & availability
-├── episante-common/             # Java: Shared Library (DTOs, Events, Security Filters)
-├── frontend/                    # React: TypeScript SPA (Vite)
-├── gateway/                     # Nginx: Reverse Proxy & API Gateway routing
-├── health-alert-engine/         # Go: Real-time telemetry alerts (Phase 2)
+├── appointment-service/         # Java — Booking management & Kafka producer
+├── auth-service/                # Java — Identity, JWT generation
+├── doctor-service/              # Java — Doctor profiles & availability
+├── episante-common/             # Java — Shared library (DTOs, events, security filters)
+├── frontend/                    # React — TypeScript SPA (Vite + Tailwind)
+├── gateway/                     # Nginx — Reverse proxy & API gateway routing
+├── health-alert-engine/         # Java — Kafka Streams anomaly detection & alerts
 ├── infra/
-│   └── compose/                 # Docker Compose, .env, and orchestration
-├── ingest-wearables-service/    # Go: High-throughput IoT wearable ingestion (Phase 2)
-├── notification-service/        # Go: Kafka Consumer for email/SMS alerts
-└── patient-service/             # Java: Patient records & PII
+│   └── compose/                 # Docker Compose orchestration
+├── ingest-wearables-service/    # Java — High-throughput IoT wearable ingestion
+├── notification-service/        # Go — Kafka consumer for email/SMS alerts
+├── patient-service/             # Java — Patient records & PII
+├── bigdata/                     # PySpark — ETL jobs (Bronze → Silver → Gold)
+├── docs/                        # Architecture diagrams & planning docs
+├── scripts/                     # Wearable simulator & utilities
+└── vault/                       # HashiCorp Vault init script
 ```
 
 ## Quick Start
@@ -178,8 +182,6 @@ episante/
 
 Ensure your local Maven cache has the latest shared library:
 
-Bash
-
 ```bash
 cd episante-common
 mvn clean install -DskipTests
@@ -188,8 +190,6 @@ mvn clean install -DskipTests
 ### 3. Launch Infrastructure
 
 Navigate to the compose directory and spin up the entire isolated network:
-
-Bash
 
 ```bash
 cd infra/compose
@@ -202,7 +202,7 @@ docker-compose up -d --build
 
 - **API Gateway (Backend Entrypoint)**: `http://localhost:8089/api/`
 
-- **HashiCorp Vault UI**: `http://localhost:8200` (Token: `episante-super-secret-root-token`)
+- **HashiCorp Vault UI**: `http://localhost:8200` (Token: set via `VAULT_DEV_ROOT_TOKEN_ID` env var)
 
 
 ## Service Inventory
@@ -215,4 +215,6 @@ docker-compose up -d --build
 |**Patient Service**|9091|`/api/patients/`|Patient CRUD, Medical History|
 |**Doctor Service**|9092|`/api/doctors/`|Doctor CRUD, Specialties|
 |**Appt Service**|9093|`/api/appointments/`|Scheduling, overlap validation, Event publishing|
-|**Notif Service**|N/A|_Internal Kafka_|Listens to `appointment.created`, sends emails (Go)|
+|**Ingest Wearables**|9096|`/api/wearable/`|IoT telemetry ingestion, Kafka producer (Java)|
+|**Health Alert Engine**|9097|`/api/alerts/`|Kafka Streams anomaly detection, alert generation (Java)|
+|**Notif Service**|N/A|_Internal Kafka_|Listens to events, sends mock emails/SMS (Go)|
