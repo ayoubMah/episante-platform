@@ -82,6 +82,31 @@
       networks:
         - episante_net
 
+    # --- Loki (Log Aggregation) ---
+    loki:
+      image: grafana/loki:2.9.4
+      container_name: episante-loki
+      ports:
+        - "3100:3100"
+      command: -config.file=/etc/loki/local-config.yaml
+      networks:
+        - episante_net
+
+    # --- Promtail (Log Shipper) ---
+    promtail:
+      image: grafana/promtail:2.9.4
+      container_name: episante-promtail
+      volumes:
+        - /var/log:/var/log
+        - /var/lib/docker/containers:/var/lib/docker/containers:ro
+        - /var/run/docker.sock:/var/run/docker.sock
+        - ./promtail/promtail.yml:/etc/promtail/config.yml:ro
+      command: -config.file=/etc/promtail/config.yml
+      depends_on:
+        - loki
+      networks:
+        - episante_net
+
     # --- Prometheus (Metrics Scraper) ---
     prometheus:
       image: prom/prometheus:v2.50.1
@@ -106,6 +131,7 @@
         - ./grafana/dashboards:/var/lib/grafana/dashboards
       depends_on:
         - prometheus
+        - loki
       networks:
         - episante_net
 

@@ -109,22 +109,22 @@
 
 ## Phase 9 — Polishing, Observability & Documentation
 
-- [ ] Logging (ELK or Loki optional)
-- [ ] Monitoring dashboards
-- [ ] Final documentation:
-  - [ ] Architecture docs
-  - [ ] Deployment guide
-  - [ ] API documentation
-- [ ] Cleanup & optimization
+- [x] Logging (Loki + Promtail → Grafana)
+- [x] Monitoring dashboards (Prometheus + Grafana)
+- [x] Final documentation:
+  - [x] Architecture docs (README.md + mermaid diagrams)
+  - [x] Deployment guide (docs/deployment.md)
+  - [x] API documentation (docs/api.md)
+- [x] Cleanup & optimization
 
 ---
 
 ## Final Goal
 
-- [ ] Full microservices platform deployed across multiple VMs
-- [ ] CRUD medical system functional
-- [ ] Real-time wearable alerts operational
+- [x] Full microservices platform deployed across multiple VMs
+- [x] CRUD medical system functional
+- [x] Real-time wearable alerts operational
 - [ ] Big data analytics pipeline complete
-- [ ] Secure secret management implemented
-- [ ] CI/CD automation working
-- [ ] Professional dev/ops architecture documented
+- [x] Secure secret management implemented
+- [x] CI/CD automation working
+- [x] Professional dev/ops architecture documented
