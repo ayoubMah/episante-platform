@@ -9,10 +9,10 @@
   - [x] Spring Boot, Java 21
   - [x] PostgreSQL
   - [x] React + Vite + Tailwind
-  - [ ] Kafka, Spark Streaming
-  - [ ] Hadoop, MongoDB, Postgres DW
-  - [ ] HashiCorp Vault
-  - [ ] Jenkins CI/CD
+  - [x] Kafka, Spark Streaming
+  - [x] Hadoop, MongoDB, Postgres DW
+  - [x] HashiCorp Vault
+  - [x] Jenkins CI/CD
 - [x] Docker + Docker Compose structure for each service
 
 ---
@@ -22,11 +22,11 @@
 - [x] Doctor Service CRUD
 - [x] Patient Service CRUD
 - [x] Appointment Service CRUD
-- [ ] Shared API gateway routes (local Nginx reverse proxy)
+- [x] Shared API gateway routes (local Nginx reverse proxy)
 - [x] Local PostgreSQL databases for each service
 - [x] Flyway migrations (V1 schema, V2 seed data)
 - [x] Local frontend consuming backend APIs
-- [ ] Basic authentication (optional)
+- [x] Basic authentication (JWT via auth-service)
 
 ---
 
