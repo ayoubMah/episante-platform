@@ -69,9 +69,9 @@
 
 - [x] Kafka producer (Ingest Wearables Service)
 - [x] Kafka consumer (Notification Service)
-- [ ] Kafka Streams reads sensor stream
-- [ ] Kafka Streams publishes alerts back to Kafka
-- [ ] Alerts consumed by Health Alert Engine
+- [x] Kafka Streams reads sensor stream
+- [x] Kafka Streams publishes alerts back to Kafka
+- [x] Alerts consumed by Health Alert Engine
 - [x] Doctor UI receives alert notification
 
 ---
