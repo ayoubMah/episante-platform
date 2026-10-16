@@ -4,6 +4,7 @@ import com.upec.episantecommon.dto.*;
 import com.upec.episantecommon.event.AppointmentCreatedEvent;
 import com.upec.episantecommon.enums.AppointmentStatus;
 import com.upec.episantecommon.exception.BadRequestException;
+import com.upec.episantecommon.exception.ForbiddenException;
 import com.upec.episantecommon.exception.NotFoundException;
 import com.upec.episantecommon.security.SecurityUtils;
 import episante.aai.appointmentservice.config.KafkaTopicsProperties;
@@ -77,6 +78,11 @@ public class AppointmentService {
     // CREATE
     // ---------------------------
     public AppointmentResponseDTO create(CreateAppointmentRequestDTO request) {
+
+        // --- OWNERSHIP: a patient can only book for themselves (S-4) ---
+        if (SecurityUtils.isPatient()) {
+            request.setPatientId(SecurityUtils.getCurrentUserId());
+        }
 
         // --- VALIDATION PHASE ---
         validateAppointmentRequest(request);
@@ -196,6 +202,16 @@ public class AppointmentService {
 
         if (existing.getStartTime().isBefore(OffsetDateTime.now())) {
             throw new BadRequestException("Cannot update past appointments.");
+        }
+
+        // --- OWNERSHIP: only an admin can reassign patient or doctor (S-4) ---
+        if (request.getPatientId() == null) request.setPatientId(existing.getPatientId());
+        if (request.getDoctorId() == null) request.setDoctorId(existing.getDoctorId());
+
+        if (!SecurityUtils.isAdmin()
+                && (!existing.getPatientId().equals(request.getPatientId())
+                    || !existing.getDoctorId().equals(request.getDoctorId()))) {
+            throw new ForbiddenException("Only an admin can change the patient or doctor of an appointment.");
         }
 
         validateAppointmentRequest(request);
