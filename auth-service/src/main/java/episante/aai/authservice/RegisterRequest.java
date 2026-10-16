@@ -1,6 +1,8 @@
 package episante.aai.authservice;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.upec.episantecommon.enums.Role;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +19,13 @@ public class RegisterRequest {
 
     @NotNull
     private Role role;
+
+    // Only PATIENT and DOCTOR may self-register; ADMIN accounts are provisioned out of band
+    @AssertTrue(message = "role must be PATIENT or DOCTOR")
+    @JsonIgnore
+    public boolean isSelfRegistrableRole() {
+        return role == null || role == Role.PATIENT || role == Role.DOCTOR;
+    }
 
     // Patient-specific fields
     private String firstName;

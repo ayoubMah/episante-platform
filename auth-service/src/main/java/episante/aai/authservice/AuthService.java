@@ -2,9 +2,12 @@ package episante.aai.authservice;
 
 import com.upec.episantecommon.dto.DoctorProfileRequest;
 import com.upec.episantecommon.dto.PatientProfileRequest;
+import com.upec.episantecommon.enums.Role;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -27,6 +30,11 @@ public class AuthService {
     }
 
     public UUID register(RegisterRequest request) {
+
+        // 0. Only PATIENT / DOCTOR can self-register (no ADMIN escalation)
+        if (request.getRole() != Role.PATIENT && request.getRole() != Role.DOCTOR) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "role must be PATIENT or DOCTOR");
+        }
 
         // 1. Check if email exists (Fail fast)
         if (userRepository.existsByEmail(request.getEmail())) {
