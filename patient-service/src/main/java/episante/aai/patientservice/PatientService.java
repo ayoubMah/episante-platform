@@ -2,7 +2,9 @@ package episante.aai.patientservice;
 
 import com.upec.episantecommon.dto.PatientProfileRequest;
 import com.upec.episantecommon.exception.DuplicateResourceException;
+import com.upec.episantecommon.exception.ForbiddenException;
 import com.upec.episantecommon.exception.NotFoundException;
+import com.upec.episantecommon.security.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import com.upec.episantecommon.enums.Gender;
@@ -76,6 +79,18 @@ public class PatientService {
     @Transactional
     public Patient update(UUID id, PatientProfileRequest req) {
         Patient existing = findById(id);
+
+        // --- OWNERSHIP: only an admin can change the treating doctor or the login email (S-5) ---
+        if (req.getEmail() == null || req.getEmail().equalsIgnoreCase(existing.getEmail())) {
+            req.setEmail(existing.getEmail());
+        }
+        if (req.getDoctorId() == null) req.setDoctorId(existing.getDoctorId());
+
+        if (!SecurityUtils.isAdmin()
+                && (!existing.getEmail().equals(req.getEmail())
+                    || !Objects.equals(existing.getDoctorId(), req.getDoctorId()))) {
+            throw new ForbiddenException("Only an admin can change the email or doctor of a patient.");
+        }
 
         existing.setFirstName(req.getFirstName());
         existing.setLastName(req.getLastName());
