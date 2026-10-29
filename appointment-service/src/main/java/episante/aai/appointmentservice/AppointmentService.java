@@ -73,6 +73,11 @@ public class AppointmentService {
         throw new AccessDeniedException("Unauthorized");
     }
 
+    // Patients the current doctor has at least one appointment with (used by patient-service, S-6)
+    public List<UUID> getPatientIdsForCurrentDoctor() {
+        return repository.findDistinctPatientIdsByDoctorId(SecurityUtils.getCurrentUserId());
+    }
+
     // ---------------------------
     // CREATE
     // ---------------------------

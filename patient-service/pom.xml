@@ -111,6 +111,12 @@
             <artifactId>spring-cloud-starter-vault-config</artifactId>
         </dependency>
 
+        <!-- OpenFeign — asks appointment-service which patients a doctor has seen -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

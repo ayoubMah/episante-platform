@@ -3,6 +3,10 @@ package episante.aai.patientservice;
 import com.upec.episantecommon.dto.PatientProfileRequest;
 import com.upec.episantecommon.exception.DuplicateResourceException;
 import com.upec.episantecommon.exception.NotFoundException;
+import com.upec.episantecommon.security.SecurityUtils;
+import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,10 +23,14 @@ import com.upec.episantecommon.enums.Gender;
 @Transactional(readOnly = true)
 public class PatientService {
 
-    private final PatientRepository repo;
+    private static final Logger log = LoggerFactory.getLogger(PatientService.class);
 
-    public PatientService(PatientRepository repo) {
+    private final PatientRepository repo;
+    private final AppointmentClient appointmentClient;
+
+    public PatientService(PatientRepository repo, AppointmentClient appointmentClient) {
         this.repo = repo;
+        this.appointmentClient = appointmentClient;
     }
 
     public List<Patient> findAll() {
@@ -31,6 +39,41 @@ public class PatientService {
 
     public Page<Patient> findAll(Pageable pageable) {
         return repo.findAll(pageable);
+    }
+
+    // --- SCOPE (S-6): admin sees everyone, a doctor only their treated / appointment patients ---
+    public Page<Patient> findAllForCurrentUser(Pageable pageable) {
+        if (SecurityUtils.isAdmin()) {
+            return repo.findAll(pageable);
+        }
+
+        UUID doctorId = SecurityUtils.getCurrentUserId();
+        List<UUID> withAppointment = patientIdsWithAppointment();
+        if (withAppointment.isEmpty()) {
+            return repo.findByDoctorId(doctorId, pageable);
+        }
+        return repo.findByDoctorIdOrIdIn(doctorId, withAppointment, pageable);
+    }
+
+    // Used by @PreAuthorize: is this patient treated by, or booked with, the current doctor?
+    public boolean isPatientOfCurrentDoctor(UUID patientId) {
+        if (!SecurityUtils.isDoctor()) return false;
+
+        Patient patient = repo.findById(patientId).orElse(null);
+        if (patient == null) return false;
+
+        return SecurityUtils.getCurrentUserId().equals(patient.getDoctorId())
+                || patientIdsWithAppointment().contains(patientId);
+    }
+
+    // Fail closed: if appointment-service is unreachable, only the treating-doctor link counts
+    private List<UUID> patientIdsWithAppointment() {
+        try {
+            return appointmentClient.getMyPatientIds();
+        } catch (FeignException e) {
+            log.warn("Could not fetch the doctor's appointment patients (status {})", e.status());
+            return List.of();
+        }
     }
 
     public Patient findById(UUID id) {

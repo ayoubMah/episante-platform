@@ -21,6 +21,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findByPatientId(UUID patientId);
     Page<Appointment> findByPatientId(UUID patientId, Pageable pageable);
 
+    @Query("SELECT DISTINCT a.patientId FROM Appointment a WHERE a.doctorId = :doctorId")
+    List<UUID> findDistinctPatientIdsByDoctorId(UUID doctorId);
+
 
     // -------------------------------------------------------
     // CREATE — check overlapping appointment

@@ -28,11 +28,11 @@ public class PatientController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return PageResponse.of(
-                service.findAll(PageRequest.of(page, size)).map(this::toDTO));
+                service.findAllForCurrentUser(PageRequest.of(page, size)).map(this::toDTO));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("@securityRules.canViewPatient(#id)")
+    @PreAuthorize("@securityRules.isSelf(#id) or hasRole('ADMIN') or @patientService.isPatientOfCurrentDoctor(#id)")
     public PatientResponseDTO one(@PathVariable UUID id) {
         return toDTO(service.findById(id));
     }

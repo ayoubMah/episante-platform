@@ -45,6 +45,8 @@ server:
 application:
   security:
     jwt-secret: ${jwt-secret}
+  config:
+    appointment-url: ${APPLICATION_CONFIG_APPOINTMENT-URL:http://localhost:9093}
 
 
 management:
