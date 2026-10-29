@@ -60,6 +60,15 @@ public class AppointmentController {
     }
 
     /**
+     * IDs of the patients the current doctor has appointments with (S-6)
+     */
+    @GetMapping("/my-patients")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public List<UUID> getMyPatientIds() {
+        return service.getPatientIdsForCurrentDoctor();
+    }
+
+    /**
      * Update appointment
      */
     @PutMapping("/{id}")
